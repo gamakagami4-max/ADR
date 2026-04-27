@@ -1,137 +1,114 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useContext, createContext } from "react";
+
+// ─── Theme ────────────────────────────────────────────────────────────────────
+
+const LIGHT = {
+  bg:           "#f9fafb",
+  surface:      "#ffffff",
+  border:       "#e5e7eb",
+  text:         "#111827",
+  textSub:      "#6b7280",
+  textHint:     "#9ca3af",
+  tag:          "#f3f4f6",
+  tagText:      "#374151",
+  tagBorder:    "#e5e7eb",
+  divider:      "#f3f4f6",
+  input:        "#ffffff",
+  navBg:        "#ffffff",
+  red:          "#dc2626",
+  redLight:     "#fef2f2",
+  redBorder:    "#fecaca",
+  stableText:   "#065f46",
+  stableBg:     "#ecfdf5",
+  stableBorder: "#a7f3d0",
+  betaText:     "#92400e",
+  betaBg:       "#fffbeb",
+  betaBorder:   "#fcd34d",
+};
+
+const DARK = {
+  bg:           "#0f172a",
+  surface:      "#1e293b",
+  border:       "#334155",
+  text:         "#f1f5f9",
+  textSub:      "#94a3b8",
+  textHint:     "#64748b",
+  tag:          "#1e293b",
+  tagText:      "#cbd5e1",
+  tagBorder:    "#334155",
+  divider:      "#1e293b",
+  input:        "#1e293b",
+  navBg:        "#0f172a",
+  red:          "#ef4444",
+  redLight:     "#1c1010",
+  redBorder:    "#3b1515",
+  stableText:   "#6ee7b7",
+  stableBg:     "#022c22",
+  stableBorder: "#065f46",
+  betaText:     "#fbbf24",
+  betaBg:       "#2d1a00",
+  betaBorder:   "#78350f",
+};
+
+const ThemeContext = createContext({ t: LIGHT, dark: false, toggle: () => {} });
+const useT = () => useContext(ThemeContext);
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
 
 const apps = [
   {
-    id: "automotive",
-    icon: "🔧",
-    name: "ADR Auto Portal",
-    division: "Automotive",
-    version: "v3.2.1",
-    platform: "iOS & Android",
-    access: "Internal",
-    status: "stable",
-    rating: "4.8",
-    ratingCount: "124",
-    stars: 5,
-    tags: ["Manufacturing", "OEM", "QC"],
+    id: "automotive", icon: "🔧", name: "ADR Auto Portal", division: "Automotive",
+    version: "v3.2.1", platform: "iOS & Android", access: "Internal", status: "stable",
+    rating: "4.8", ratingCount: "124", stars: 5, tags: ["Manufacturing", "OEM", "QC"],
     tagline: "End-to-end management for automotive component production, OEM orders, and quality control.",
     desc: "End-to-end management for automotive component production, OEM orders, and quality control across all manufacturing plants.",
-    about:
-      "ADR Auto Portal is the central digital hub for ADR Group's Automotive Division. Used by production supervisors, QC teams, and procurement managers across the Kapuk and Tangerang plants, it brings together purchase orders, quality inspection logs, OEM delivery schedules, and supplier communications in a single, mobile-first platform. Integrated with the ERP system, it provides live production data and automated KPI alerts.",
-    category: "Manufacturing",
-    size: "48.2 MB",
-    updated: "12 Apr 2026",
-    users: "1,200+ active",
+    about: "ADR Auto Portal is the central digital hub for ADR Group's Automotive Division. Used by production supervisors, QC teams, and procurement managers across the Kapuk and Tangerang plants, it brings together purchase orders, quality inspection logs, OEM delivery schedules, and supplier communications in a single, mobile-first platform. Integrated with the ERP system, it provides live production data and automated KPI alerts.",
+    category: "Manufacturing", size: "48.2 MB", updated: "12 Apr 2026", users: "1,200+ active",
   },
   {
-    id: "agro",
-    icon: "🌿",
-    name: "ADR Agro Manager",
-    division: "Agribusiness",
-    version: "v1.5.0",
-    platform: "Android",
-    access: "Field Use",
-    status: "beta",
-    rating: "4.3",
-    ratingCount: "68",
-    stars: 4,
-    tags: ["Palm Oil", "MDF", "Forestry"],
+    id: "agro", icon: "🌿", name: "ADR Agro Manager", division: "Agribusiness",
+    version: "v1.5.0", platform: "Android", access: "Field Use", status: "beta",
+    rating: "4.3", ratingCount: "68", stars: 4, tags: ["Palm Oil", "MDF", "Forestry"],
     tagline: "Plantation monitoring, MDF mill operations, and harvest tracking for ADR Agribusiness division.",
     desc: "Plantation monitoring, MDF mill operations, and harvest tracking for ADR's agribusiness division across Kalimantan and Sumatra.",
-    about:
-      "ADR Agro Manager empowers field officers and mill supervisors to record, track, and report on plantation activities in real time. Designed for use in low-connectivity environments, the app supports offline data capture that syncs automatically when a connection is available. It covers palm oil harvest logging, MDF production batch reporting, and industrial forestry compliance documentation.",
-    category: "Agribusiness",
-    size: "32.7 MB",
-    updated: "3 Mar 2026",
-    users: "420+ active",
+    about: "ADR Agro Manager empowers field officers and mill supervisors to record, track, and report on plantation activities in real time. Designed for use in low-connectivity environments, the app supports offline data capture that syncs automatically when a connection is available. It covers palm oil harvest logging, MDF production batch reporting, and industrial forestry compliance documentation.",
+    category: "Agribusiness", size: "32.7 MB", updated: "3 Mar 2026", users: "420+ active",
   },
   {
-    id: "property",
-    icon: "🏙️",
-    name: "ADR Property Hub",
-    division: "Property",
-    version: "v2.0.4",
-    platform: "Web & Mobile",
-    access: "Enterprise",
-    status: "stable",
-    rating: "4.7",
-    ratingCount: "41",
-    stars: 5,
-    tags: ["Tenant CRM", "Pipeline", "Finance"],
+    id: "property", icon: "🏙️", name: "ADR Property Hub", division: "Property",
+    version: "v2.0.4", platform: "Web & Mobile", access: "Enterprise", status: "stable",
+    rating: "4.7", ratingCount: "41", stars: 5, tags: ["Tenant CRM", "Pipeline", "Finance"],
     tagline: "Property project pipeline, tenant management, and investment tracking across Jakarta, Bali, and Batam.",
     desc: "Property project pipeline, tenant management, and investment tracking across ADR's portfolio in Jakarta, Bali, and Batam.",
-    about:
-      "ADR Property Hub serves the Property Division's development and asset management teams. It provides a complete view of ongoing construction projects, tenant lease agreements, maintenance scheduling, and financial performance per asset. The app integrates with the accounting system to surface occupancy rates, rental income, and CAPEX tracking on a single dashboard available to executives and site managers alike.",
-    category: "Property",
-    size: "61.4 MB",
-    updated: "28 Mar 2026",
-    users: "380+ active",
+    about: "ADR Property Hub serves the Property Division's development and asset management teams. It provides a complete view of ongoing construction projects, tenant lease agreements, maintenance scheduling, and financial performance per asset. The app integrates with the accounting system to surface occupancy rates, rental income, and CAPEX tracking on a single dashboard available to executives and site managers alike.",
+    category: "Property", size: "61.4 MB", updated: "28 Mar 2026", users: "380+ active",
   },
   {
-    id: "distribution",
-    icon: "📦",
-    name: "ADR Distribusi",
-    division: "Distribution",
-    version: "v4.0.2",
-    platform: "iOS & Android",
-    access: "Logistics",
-    status: "stable",
-    rating: "4.5",
-    ratingCount: "209",
-    stars: 4,
-    tags: ["Warehouse", "Logistics", "Inventory"],
+    id: "distribution", icon: "📦", name: "ADR Distribusi", division: "Distribution",
+    version: "v4.0.2", platform: "iOS & Android", access: "Logistics", status: "stable",
+    rating: "4.5", ratingCount: "209", stars: 4, tags: ["Warehouse", "Logistics", "Inventory"],
     tagline: "Real-time distribution tracking, warehouse inventory, and logistics coordination across 5 regional offices.",
     desc: "Real-time distribution tracking, warehouse inventory, and logistics coordination across 5 regional distribution offices throughout Indonesia.",
-    about:
-      "ADR Distribusi connects the group's five regional distribution companies — from Surabaya to Riau — under one logistics management platform. Warehouse staff use it to manage incoming and outgoing stock, dispatch personnel use it to coordinate deliveries, and management uses the analytics dashboard to monitor fulfilment rates, slow-moving inventory, and inter-branch transfers. The app integrates with third-party courier APIs for automated shipment tracking.",
-    category: "Logistics",
-    size: "54.9 MB",
-    updated: "10 Apr 2026",
-    users: "2,100+ active",
+    about: "ADR Distribusi connects the group's five regional distribution companies — from Surabaya to Riau — under one logistics management platform. Warehouse staff use it to manage incoming and outgoing stock, dispatch personnel use it to coordinate deliveries, and management uses the analytics dashboard to monitor fulfilment rates, slow-moving inventory, and inter-branch transfers.",
+    category: "Logistics", size: "54.9 MB", updated: "10 Apr 2026", users: "2,100+ active",
   },
   {
-    id: "hr",
-    icon: "👥",
-    name: "ADR People",
-    division: "HR",
-    version: "v2.3.0",
-    platform: "Web",
-    access: "Internal",
-    status: "stable",
-    rating: "4.6",
-    ratingCount: "312",
-    stars: 5,
-    tags: ["Payroll", "Attendance", "Recruitment"],
+    id: "hr", icon: "👥", name: "ADR People", division: "HR",
+    version: "v2.3.0", platform: "Web", access: "Internal", status: "stable",
+    rating: "4.6", ratingCount: "312", stars: 5, tags: ["Payroll", "Attendance", "Recruitment"],
     tagline: "Unified HR management covering payroll, attendance, and employee lifecycle for all ADR entities.",
     desc: "Unified HR management platform covering payroll processing, attendance tracking, leave management, and end-to-end recruitment.",
-    about:
-      "ADR People is the group-wide human resources platform used by HR managers and employees across all divisions. It handles monthly payroll runs, leave approvals, attendance reconciliation, and new hire onboarding workflows. Integrated with the biometric attendance systems at each site.",
-    category: "Human Resources",
-    size: "22.1 MB",
-    updated: "1 Apr 2026",
-    users: "4,000+ active",
+    about: "ADR People is the group-wide human resources platform used by HR managers and employees across all divisions. It handles monthly payroll runs, leave approvals, attendance reconciliation, and new hire onboarding workflows. Integrated with the biometric attendance systems at each site.",
+    category: "Human Resources", size: "22.1 MB", updated: "1 Apr 2026", users: "4,000+ active",
   },
   {
-    id: "finance",
-    icon: "💹",
-    name: "ADR Finance",
-    division: "Finance",
-    version: "v3.0.1",
-    platform: "Web",
-    access: "Enterprise",
-    status: "stable",
-    rating: "4.9",
-    ratingCount: "87",
-    stars: 5,
-    tags: ["Accounting", "Reporting", "Budget"],
+    id: "finance", icon: "💹", name: "ADR Finance", division: "Finance",
+    version: "v3.0.1", platform: "Web", access: "Enterprise", status: "stable",
+    rating: "4.9", ratingCount: "87", stars: 5, tags: ["Accounting", "Reporting", "Budget"],
     tagline: "Group-wide financial reporting, budget tracking, and inter-company consolidation.",
     desc: "Group-wide financial reporting, budget planning, and inter-company consolidation across all ADR business entities.",
-    about:
-      "ADR Finance is the consolidation and reporting hub for the group's finance teams. It pulls data from each business unit's accounting system to generate consolidated P&L, balance sheets, and cash flow reports. Budget vs actual tracking and approval workflows are built in.",
-    category: "Finance",
-    size: "18.6 MB",
-    updated: "8 Apr 2026",
-    users: "650+ active",
+    about: "ADR Finance is the consolidation and reporting hub for the group's finance teams. It pulls data from each business unit's accounting system to generate consolidated P&L, balance sheets, and cash flow reports. Budget vs actual tracking and approval workflows are built in.",
+    category: "Finance", size: "18.6 MB", updated: "8 Apr 2026", users: "650+ active",
   },
 ];
 
@@ -148,41 +125,24 @@ const FEATURES = [
 ];
 
 const REVIEWS = [
-  {
-    initials: "BS",
-    name: "Budi Santoso",
-    role: "Operations Manager",
-    stars: 5,
-    text: "This app has significantly improved how our team handles day-to-day operations. The interface is clean and easy to navigate even for non-technical staff.",
-  },
-  {
-    initials: "RP",
-    name: "Rina Pratiwi",
-    role: "QC Supervisor",
-    stars: 4,
-    text: "Solid application with useful reporting features. Would love to see more export options in a future update, but overall very satisfied with the performance.",
-  },
-  {
-    initials: "AW",
-    name: "Ahmad Wijaya",
-    role: "Site Coordinator",
-    stars: 5,
-    text: "Offline mode is a game changer for our field teams. Data syncs seamlessly once we're back in range. Highly recommended for remote operations.",
-  },
+  { initials: "BS", name: "Budi Santoso", role: "Operations Manager", stars: 5, text: "This app has significantly improved how our team handles day-to-day operations. The interface is clean and easy to navigate even for non-technical staff." },
+  { initials: "RP", name: "Rina Pratiwi", role: "QC Supervisor", stars: 4, text: "Solid application with useful reporting features. Would love to see more export options in a future update, but overall very satisfied with the performance." },
+  { initials: "AW", name: "Ahmad Wijaya", role: "Site Coordinator", stars: 5, text: "Offline mode is a game changer for our field teams. Data syncs seamlessly once we're back in range. Highly recommended for remote operations." },
 ];
 
-// ─── Shared components ───────────────────────────────────────────────────────
+// ─── Shared components ────────────────────────────────────────────────────────
 
 function StatusBadge({ status }) {
+  const { t } = useT();
   if (status === "stable")
     return (
-      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 99, background: t.stableBg, color: t.stableText, border: `1px solid ${t.stableBorder}`, whiteSpace: "nowrap" }}>
         Stable
       </span>
     );
   if (status === "beta")
     return (
-      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 99, background: t.betaBg, color: t.betaText, border: `1px solid ${t.betaBorder}`, whiteSpace: "nowrap" }}>
         Beta
       </span>
     );
@@ -191,92 +151,153 @@ function StatusBadge({ status }) {
 
 function Stars({ count, size = "sm" }) {
   return (
-    <span className={`text-amber-400 tracking-tight ${size === "lg" ? "text-base" : "text-xs"}`}>
+    <span style={{ color: "#f59e0b", fontSize: size === "lg" ? 15 : 11, letterSpacing: -0.5 }}>
       {Array.from({ length: 5 }, (_, i) => (i < count ? "★" : "☆")).join("")}
     </span>
   );
 }
 
-function Navbar({ onLogoClick }) {
+function Tag({ children }) {
+  const { t } = useT();
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
-      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
-        <div
-          className="flex items-center gap-3 shrink-0 cursor-pointer"
+    <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 6, background: t.tag, color: t.tagText, border: `1px solid ${t.tagBorder}`, fontWeight: 500 }}>
+      {children}
+    </span>
+  );
+}
+
+function SunIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+      <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+    </svg>
+  );
+}
+
+// ─── Layout components ────────────────────────────────────────────────────────
+
+function Navbar({ onLogoClick }) {
+  const { t, dark, toggle } = useT();
+  return (
+    <header style={{ background: t.navBg, borderBottom: `1px solid ${t.border}`, position: "sticky", top: 0, zIndex: 30, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 24px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span
           onClick={onLogoClick}
+          style={{ fontSize: 17, fontWeight: 800, letterSpacing: "0.12em", color: t.red, cursor: "pointer", userSelect: "none" }}
         >
-          <div className="w-7 h-7 bg-red-600 rounded-md flex items-center justify-center text-[11px] font-bold text-white tracking-wide">
-            ADR
-          </div>
-          <div className="h-4 w-px bg-gray-200" />
-          <span className="text-sm font-semibold text-gray-700">App Portal</span>
-          <span className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200 font-medium">
-            Internal
-          </span>
-        </div>
-        <div className="text-[11px] text-gray-400 hidden sm:block">
-          {apps.length} applications · ADR Group of Companies
-        </div>
+          ADR
+        </span>
+        <button
+          onClick={toggle}
+          style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 500, padding: "6px 12px", borderRadius: 8, border: `1px solid ${t.border}`, color: t.textSub, background: t.surface, cursor: "pointer" }}
+        >
+          {dark ? <SunIcon /> : <MoonIcon />}
+          {dark ? "Light mode" : "Dark mode"}
+        </button>
       </div>
     </header>
   );
 }
 
 function Footer() {
+  const { t } = useT();
   return (
-    <footer className="border-t border-gray-200 mt-16 py-6 px-6 text-center text-[11px] text-gray-400 bg-white">
-      <span className="font-semibold text-gray-600">ADR Group of Companies</span>
+    <footer style={{ borderTop: `1px solid ${t.border}`, marginTop: 64, padding: "20px 24px", textAlign: "center", fontSize: 11, color: t.textHint, background: t.navBg }}>
+      <span style={{ fontWeight: 600, color: t.textSub }}>ADR Group of Companies</span>
       {" "}· Wisma ADR, Jl. Pluit Raya I No. 1, North Jakarta · Internal use only · © 2026
     </footer>
   );
 }
 
-// ─── App Card ────────────────────────────────────────────────────────────────
+function SectionCard({ children, style }) {
+  const { t } = useT();
+  return (
+    <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 12, padding: 20, ...style }}>
+      {children}
+    </div>
+  );
+}
+
+function SectionTitle({ children }) {
+  const { t } = useT();
+  return (
+    <h2 style={{ fontSize: 11, fontWeight: 600, color: t.textHint, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12, margin: "0 0 12px 0" }}>
+      {children}
+    </h2>
+  );
+}
+
+function InfoRow({ label, value, valueStyle }) {
+  const { t } = useT();
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderTop: `1px solid ${t.divider}`, fontSize: 12 }}>
+      <span style={{ color: t.textHint }}>{label}</span>
+      <span style={{ fontWeight: 600, color: t.text, textAlign: "right", ...valueStyle }}>{value}</span>
+    </div>
+  );
+}
+
+// ─── App Card ─────────────────────────────────────────────────────────────────
 
 function AppCard({ app, onViewDetail }) {
+  const { t } = useT();
+  const [hovered, setHovered] = useState(false);
   return (
-    <div className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-red-300 hover:shadow-md transition-all duration-150 flex flex-col">
-      <div className="h-0.5 w-full bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: t.surface,
+        border: `1px solid ${hovered ? t.red : t.border}`,
+        borderRadius: 12,
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        transition: "border-color 0.15s, box-shadow 0.15s",
+        boxShadow: hovered ? "0 4px 16px rgba(0,0,0,0.1)" : "none",
+      }}
+    >
+      <div style={{ height: 2, background: t.red, opacity: hovered ? 1 : 0, transition: "opacity 0.15s" }} />
+      <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
 
-      <div className="p-5 flex flex-col flex-1 gap-3">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center text-xl shrink-0">
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: t.redLight, border: `1px solid ${t.redBorder}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, flexShrink: 0 }}>
               {app.icon}
             </div>
             <div>
-              <div className="text-sm font-semibold text-gray-800 leading-tight">{app.name}</div>
-              <div className="text-[11px] text-gray-400 mt-0.5">{app.division} Division</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: t.text, lineHeight: 1.3 }}>{app.name}</div>
+              <div style={{ fontSize: 11, color: t.textHint, marginTop: 2 }}>{app.division} Division</div>
             </div>
           </div>
           <StatusBadge status={app.status} />
         </div>
 
-        {/* Tagline */}
-        <p className="text-[12px] text-gray-500 leading-relaxed flex-1">{app.tagline}</p>
+        <p style={{ fontSize: 12, color: t.textSub, lineHeight: 1.55, flex: 1, margin: 0 }}>{app.tagline}</p>
 
-        {/* Tags */}
-        <div className="flex flex-wrap gap-1.5">
-          {app.tags.map((tag) => (
-            <span
-              key={tag}
-              className="text-[10px] px-2 py-0.5 rounded-md bg-gray-100 text-gray-500 border border-gray-200 font-medium"
-            >
-              {tag}
-            </span>
-          ))}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+          {app.tags.map((tag) => <Tag key={tag}>{tag}</Tag>)}
         </div>
 
-        {/* Footer row */}
-        <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5">
+        <div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <Stars count={app.stars} />
-            <span className="text-[11px] text-gray-400">{app.rating} ({app.ratingCount})</span>
+            <span style={{ fontSize: 11, color: t.textHint }}>{app.rating} ({app.ratingCount})</span>
           </div>
           <button
             onClick={() => onViewDetail(app)}
-            className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors border-none cursor-pointer shrink-0"
+            style={{ fontSize: 11, fontWeight: 600, padding: "6px 12px", borderRadius: 8, background: t.red, color: "#fff", border: "none", cursor: "pointer" }}
           >
             View Detail →
           </button>
@@ -289,6 +310,7 @@ function AppCard({ app, onViewDetail }) {
 // ─── Directory Page ───────────────────────────────────────────────────────────
 
 function DirectoryPage({ onViewDetail }) {
+  const { t } = useT();
   const [search, setSearch] = useState("");
   const [divisionFilter, setDivisionFilter] = useState("All");
   const [platformFilter, setPlatformFilter] = useState("All");
@@ -296,92 +318,57 @@ function DirectoryPage({ onViewDetail }) {
   const filtered = useMemo(() => {
     return apps.filter((app) => {
       const q = search.toLowerCase();
-      const matchSearch =
-        !q ||
-        app.name.toLowerCase().includes(q) ||
-        app.division.toLowerCase().includes(q) ||
-        app.tags.some((t) => t.toLowerCase().includes(q)) ||
-        app.tagline.toLowerCase().includes(q);
-      const matchDivision = divisionFilter === "All" || app.division === divisionFilter;
-      const matchPlatform = platformFilter === "All" || app.platform === platformFilter;
-      return matchSearch && matchDivision && matchPlatform;
+      const matchSearch = !q || app.name.toLowerCase().includes(q) || app.division.toLowerCase().includes(q) || app.tags.some((tg) => tg.toLowerCase().includes(q)) || app.tagline.toLowerCase().includes(q);
+      return matchSearch && (divisionFilter === "All" || app.division === divisionFilter) && (platformFilter === "All" || app.platform === platformFilter);
     });
   }, [search, divisionFilter, platformFilter]);
 
+  const inputStyle = {
+    background: t.input, border: `1px solid ${t.border}`, borderRadius: 8,
+    padding: "8px 32px", fontSize: 13, color: t.text, outline: "none", width: "100%",
+  };
+  const selectStyle = {
+    background: t.input, border: `1px solid ${t.border}`, borderRadius: 8,
+    padding: "8px 12px", fontSize: 13, color: t.textSub, outline: "none", cursor: "pointer",
+  };
+
   return (
-    <main className="max-w-6xl mx-auto px-6 py-10">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-1">Application Directory</h1>
-        <p className="text-sm text-gray-400">Find and access internal tools across all ADR divisions.</p>
+    <main style={{ maxWidth: 1152, margin: "0 auto", padding: "32px 24px" }}>
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: t.text, margin: "0 0 4px 0" }}>Application Directory</h1>
+        <p style={{ fontSize: 13, color: t.textHint, margin: 0 }}>Find and access internal tools across all ADR divisions.</p>
       </div>
 
-      {/* Search + Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-5">
-        <div className="relative flex-1">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm select-none">⌕</span>
-          <input
-            type="text"
-            placeholder="Search by name, division, or tag…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white border border-gray-200 rounded-lg pl-8 pr-8 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-50 transition-all shadow-sm"
-          />
+      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+        <div style={{ position: "relative", flex: 1, minWidth: 180 }}>
+          <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: t.textHint, fontSize: 14, pointerEvents: "none" }}>⌕</span>
+          <input type="text" placeholder="Search by name, division, or tag…" value={search} onChange={(e) => setSearch(e.target.value)} style={inputStyle} />
           {search && (
-            <button
-              onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs bg-transparent border-none cursor-pointer"
-            >
-              ✕
-            </button>
+            <button onClick={() => setSearch("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: t.textHint, fontSize: 12 }}>✕</button>
           )}
         </div>
-        <select
-          value={divisionFilter}
-          onChange={(e) => setDivisionFilter(e.target.value)}
-          className="bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-600 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-50 transition-all cursor-pointer shadow-sm"
-        >
-          {ALL_DIVISIONS.map((d) => (
-            <option key={d} value={d}>{d === "All" ? "All Divisions" : d}</option>
-          ))}
+        <select value={divisionFilter} onChange={(e) => setDivisionFilter(e.target.value)} style={selectStyle}>
+          {ALL_DIVISIONS.map((d) => <option key={d} value={d}>{d === "All" ? "All Divisions" : d}</option>)}
         </select>
-        <select
-          value={platformFilter}
-          onChange={(e) => setPlatformFilter(e.target.value)}
-          className="bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-600 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-50 transition-all cursor-pointer shadow-sm"
-        >
-          {ALL_PLATFORMS.map((p) => (
-            <option key={p} value={p}>{p === "All" ? "All Platforms" : p}</option>
-          ))}
+        <select value={platformFilter} onChange={(e) => setPlatformFilter(e.target.value)} style={selectStyle}>
+          {ALL_PLATFORMS.map((p) => <option key={p} value={p}>{p === "All" ? "All Platforms" : p}</option>)}
         </select>
       </div>
 
-      {/* Result count */}
-      <p className="text-[11px] text-gray-400 mb-5">
-        {filtered.length === apps.length
-          ? `Showing all ${apps.length} apps`
-          : `${filtered.length} of ${apps.length} apps`}
-        {search && (
-          <span className="ml-1">
-            for <span className="text-gray-600 font-medium">"{search}"</span>
-          </span>
-        )}
+      <p style={{ fontSize: 11, color: t.textHint, marginBottom: 20 }}>
+        {filtered.length === apps.length ? `Showing all ${apps.length} apps` : `${filtered.length} of ${apps.length} apps`}
+        {search && <span> for <strong style={{ color: t.text }}>&ldquo;{search}&rdquo;</strong></span>}
       </p>
 
-      {/* Grid */}
       {filtered.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((app) => (
-            <AppCard key={app.id} app={app} onViewDetail={onViewDetail} />
-          ))}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
+          {filtered.map((app) => <AppCard key={app.id} app={app} onViewDetail={onViewDetail} />)}
         </div>
       ) : (
-        <div className="text-center py-24">
-          <div className="text-4xl mb-3 opacity-20">⊘</div>
-          <div className="text-sm text-gray-500">No apps match your search.</div>
-          <button
-            onClick={() => { setSearch(""); setDivisionFilter("All"); setPlatformFilter("All"); }}
-            className="mt-3 text-xs text-red-500 hover:text-red-700 underline underline-offset-2 transition-colors bg-transparent border-none cursor-pointer"
-          >
+        <div style={{ textAlign: "center", padding: "80px 0" }}>
+          <div style={{ fontSize: 36, opacity: 0.2, marginBottom: 12 }}>⊘</div>
+          <div style={{ fontSize: 13, color: t.textSub }}>No apps match your search.</div>
+          <button onClick={() => { setSearch(""); setDivisionFilter("All"); setPlatformFilter("All"); }} style={{ marginTop: 10, fontSize: 12, color: t.red, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
             Clear filters
           </button>
         </div>
@@ -393,185 +380,130 @@ function DirectoryPage({ onViewDetail }) {
 // ─── Detail Page ──────────────────────────────────────────────────────────────
 
 function DetailPage({ app, onBack }) {
-  return (
-    <main className="max-w-5xl mx-auto px-6 py-10">
+  const { t } = useT();
 
-      {/* Breadcrumb */}
+  return (
+    <main style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px" }}>
       <button
         onClick={onBack}
-        className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-red-600 transition-colors mb-8 bg-transparent border-none cursor-pointer p-0 group"
+        style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: t.textHint, background: "none", border: "none", cursor: "pointer", marginBottom: 24, padding: 0 }}
       >
-        <span className="group-hover:-translate-x-0.5 transition-transform">←</span>
-        <span>Back to App Directory</span>
+        ← Back to App Directory
       </button>
 
-      {/* Hero card */}
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm mb-6">
-        <div className="h-1 w-full bg-red-600" />
-        <div className="p-8">
-          <div className="flex flex-col sm:flex-row sm:items-start gap-6">
-            <div className="w-20 h-20 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-4xl shrink-0 shadow-sm">
+      {/* Hero */}
+      <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 14, overflow: "hidden", marginBottom: 20 }}>
+        <div style={{ height: 3, background: t.red }} />
+        <div style={{ padding: 28 }}>
+          <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
+            <div style={{ width: 68, height: 68, borderRadius: 16, background: t.redLight, border: `1px solid ${t.redBorder}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, flexShrink: 0 }}>
               {app.icon}
             </div>
-            <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold text-gray-800">{app.name}</h1>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+                <h1 style={{ fontSize: 20, fontWeight: 700, color: t.text, margin: 0 }}>{app.name}</h1>
                 <StatusBadge status={app.status} />
-                <span className="text-[11px] font-mono text-gray-400 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded">
-                  {app.version}
-                </span>
+                <span style={{ fontSize: 10, fontFamily: "monospace", color: t.textHint, background: t.tag, border: `1px solid ${t.border}`, padding: "2px 6px", borderRadius: 5 }}>{app.version}</span>
               </div>
-              <p className="text-sm text-gray-500 leading-relaxed mb-5 max-w-2xl">{app.desc}</p>
-              <div className="flex flex-wrap gap-2">
-                <button className="text-sm font-semibold px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors border-none cursor-pointer">
-                  ⬇ Download App
-                </button>
-                <button className="text-sm font-medium px-5 py-2.5 rounded-lg border border-gray-200 text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition-colors bg-white cursor-pointer">
-                  Request Access
-                </button>
+              <p style={{ fontSize: 13, color: t.textSub, lineHeight: 1.6, marginBottom: 16 }}>{app.desc}</p>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button style={{ fontSize: 13, fontWeight: 600, padding: "9px 18px", borderRadius: 9, background: t.red, color: "#fff", border: "none", cursor: "pointer" }}>⬇ Download App</button>
+                <button style={{ fontSize: 13, padding: "9px 18px", borderRadius: 9, background: t.surface, color: t.text, border: `1px solid ${t.border}`, cursor: "pointer" }}>Request Access</button>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main content grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      {/* Content grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 16, alignItems: "start" }}>
 
-        {/* Left col — 2/3 */}
-        <div className="lg:col-span-2 flex flex-col gap-6">
+        {/* Left */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <SectionCard>
+            <SectionTitle>About this app</SectionTitle>
+            <p style={{ fontSize: 13, color: t.textSub, lineHeight: 1.65, margin: 0 }}>{app.about}</p>
+          </SectionCard>
 
-          {/* About */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">About This App</h2>
-            <p className="text-sm text-gray-600 leading-relaxed">{app.about}</p>
-          </div>
-
-          {/* Key Features */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Key Features</h2>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <SectionCard>
+            <SectionTitle>Key features</SectionTitle>
+            <ul style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: 0, margin: 0, listStyle: "none" }}>
               {FEATURES.map((f, i) => (
-                <li key={i} className="flex items-start gap-2.5 text-sm text-gray-600">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: t.textSub, lineHeight: 1.45 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: t.red, flexShrink: 0, marginTop: 4 }} />
                   {f}
                 </li>
               ))}
             </ul>
-          </div>
+          </SectionCard>
 
-          {/* Screenshots */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Screenshots</h2>
-            <div className="grid grid-cols-3 gap-3">
+          <SectionCard>
+            <SectionTitle>Screenshots</SectionTitle>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
               {[1, 2, 3].map((n) => (
-                <div
-                  key={n}
-                  className="bg-gray-50 border border-gray-200 rounded-xl aspect-[9/16] flex flex-col items-center justify-center gap-2"
-                >
-                  <span className="text-2xl opacity-20">📱</span>
-                  <span className="text-[9px] text-gray-400">Screen {n}</span>
+                <div key={n} style={{ background: t.tag, border: `1px solid ${t.border}`, borderRadius: 12, aspectRatio: "9/16", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 10, color: t.textHint }}>
+                  <span style={{ fontSize: 22, opacity: 0.2 }}>📱</span>
+                  Screen {n}
                 </div>
               ))}
             </div>
-          </div>
+          </SectionCard>
 
-          {/* Reviews */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">User Reviews</h2>
-              <div className="flex items-center gap-1.5">
+          <SectionCard>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <SectionTitle>User reviews</SectionTitle>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <Stars count={app.stars} size="lg" />
-                <span className="text-sm font-semibold text-gray-700">{app.rating}</span>
-                <span className="text-xs text-gray-400">({app.ratingCount})</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: t.text }}>{app.rating}</span>
+                <span style={{ fontSize: 11, color: t.textHint }}>({app.ratingCount})</span>
               </div>
             </div>
-            <div className="flex flex-col divide-y divide-gray-100">
-              {REVIEWS.map((review, i) => (
-                <div key={i} className="py-4 first:pt-0 last:pb-0">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-[11px] font-bold text-white shrink-0">
-                      {review.initials}
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-gray-700">{review.name}</div>
-                      <div className="flex items-center gap-1.5">
-                        <Stars count={review.stars} />
-                        <span className="text-[10px] text-gray-400">{review.role}</span>
-                      </div>
+            {REVIEWS.map((review, i) => (
+              <div key={i} style={{ padding: "14px 0", borderTop: i === 0 ? "none" : `1px solid ${t.divider}` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: t.red, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+                    {review.initials}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>{review.name}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <Stars count={review.stars} />
+                      <span style={{ fontSize: 10, color: t.textHint }}>{review.role}</span>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500 leading-relaxed">{review.text}</p>
                 </div>
-              ))}
-            </div>
-          </div>
+                <p style={{ fontSize: 12, color: t.textSub, lineHeight: 1.55, margin: 0 }}>{review.text}</p>
+              </div>
+            ))}
+          </SectionCard>
         </div>
 
-        {/* Right col — 1/3 sidebar */}
-        <div className="flex flex-col gap-4">
+        {/* Sidebar */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <SectionCard>
+            <SectionTitle>App info</SectionTitle>
+            {[["Version", app.version], ["Division", app.division], ["Category", app.category], ["Platform", app.platform], ["Access", app.access], ["Size", app.size], ["Updated", app.updated], ["Active Users", app.users]].map(([label, val]) => (
+              <InfoRow key={label} label={label} value={val} />
+            ))}
+          </SectionCard>
 
-          {/* App Info */}
-          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">App Info</h2>
-            <div className="flex flex-col divide-y divide-gray-100">
-              {[
-                ["Version", app.version],
-                ["Division", app.division],
-                ["Category", app.category],
-                ["Platform", app.platform],
-                ["Access", app.access],
-                ["Size", app.size],
-                ["Updated", app.updated],
-                ["Active Users", app.users],
-              ].map(([label, val]) => (
-                <div key={label} className="flex justify-between items-center py-2.5 text-xs">
-                  <span className="text-gray-400">{label}</span>
-                  <span className="font-semibold text-gray-700 text-right">{val}</span>
-                </div>
-              ))}
+          <SectionCard>
+            <SectionTitle>Tags</SectionTitle>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+              {app.tags.map((tag) => <Tag key={tag}>{tag}</Tag>)}
             </div>
-          </div>
+          </SectionCard>
 
-          {/* Tags */}
-          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Tags</h2>
-            <div className="flex flex-wrap gap-1.5">
-              {app.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-xs px-2.5 py-1 rounded-md bg-gray-100 text-gray-600 border border-gray-200 font-medium"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
+          <SectionCard>
+            <SectionTitle>Support</SectionTitle>
+            <InfoRow label="Contact" value="apps@adr-group.co.id" valueStyle={{ color: t.red }} />
+            <InfoRow label="Hours" value="Mon–Fri, 08–17 WIB" />
+          </SectionCard>
 
-          {/* Support */}
-          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Support</h2>
-            <div className="flex flex-col divide-y divide-gray-100">
-              <div className="flex justify-between items-center py-2.5 text-xs">
-                <span className="text-gray-400">Contact</span>
-                <span className="text-red-600 font-semibold">apps@adr-group.co.id</span>
-              </div>
-              <div className="flex justify-between items-center py-2.5 text-xs">
-                <span className="text-gray-400">Hours</span>
-                <span className="text-gray-700 font-semibold">Mon–Fri, 08–17 WIB</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Download */}
-          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col gap-2">
-            <button className="w-full text-sm font-semibold py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors border-none cursor-pointer">
-              ⬇ Download for iOS
-            </button>
-            <button className="w-full text-sm font-medium py-2.5 rounded-lg border border-gray-200 text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition-colors bg-white cursor-pointer">
-              Download for Android
-            </button>
-          </div>
+          <SectionCard style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <button style={{ width: "100%", fontSize: 13, fontWeight: 600, padding: "9px 0", borderRadius: 9, background: t.red, color: "#fff", border: "none", cursor: "pointer" }}>⬇ Download for iOS</button>
+            <button style={{ width: "100%", fontSize: 13, padding: "9px 0", borderRadius: 9, background: t.surface, color: t.text, border: `1px solid ${t.border}`, cursor: "pointer" }}>Download for Android</button>
+          </SectionCard>
         </div>
       </div>
     </main>
@@ -581,29 +513,23 @@ function DetailPage({ app, onBack }) {
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [page, setPage] = useState("directory"); // "directory" | "detail"
+  const [dark, setDark] = useState(false);
+  const [page, setPage] = useState("directory");
   const [selectedApp, setSelectedApp] = useState(null);
 
-  const goToDetail = (app) => {
-    setSelectedApp(app);
-    setPage("detail");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  const theme = { t: dark ? DARK : LIGHT, dark, toggle: () => setDark((d) => !d) };
 
-  const goToDirectory = () => {
-    setPage("directory");
-    setSelectedApp(null);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  const goToDetail = (app) => { setSelectedApp(app); setPage("detail"); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const goToDirectory = () => { setPage("directory"); setSelectedApp(null); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
-      <Navbar onLogoClick={goToDirectory} />
-
-      {page === "directory" && <DirectoryPage onViewDetail={goToDetail} />}
-      {page === "detail" && selectedApp && <DetailPage app={selectedApp} onBack={goToDirectory} />}
-
-      <Footer />
-    </div>
+    <ThemeContext.Provider value={theme}>
+      <div style={{ minHeight: "100vh", background: theme.t.bg, color: theme.t.text, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+        <Navbar onLogoClick={goToDirectory} />
+        {page === "directory" && <DirectoryPage onViewDetail={goToDetail} />}
+        {page === "detail" && selectedApp && <DetailPage app={selectedApp} onBack={goToDirectory} />}
+        <Footer />
+      </div>
+    </ThemeContext.Provider>
   );
 }
