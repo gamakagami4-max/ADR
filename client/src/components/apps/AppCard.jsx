@@ -7,6 +7,7 @@ import Tag from "../common/Tag";
 export default function AppCard({ app, onViewDetail }) {
   const { t } = useT();
   const [hovered, setHovered] = useState(false);
+  const hasImageIcon = typeof app.icon === "string" && (app.icon.startsWith("data:image/") || app.icon.startsWith("http"));
 
   return (
     <div
@@ -28,7 +29,7 @@ export default function AppCard({ app, onViewDetail }) {
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 38, height: 38, borderRadius: 10, background: t.redLight, border: `1px solid ${t.redBorder}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, flexShrink: 0 }}>
-              {app.icon}
+              {hasImageIcon ? <img src={app.icon} alt={`${app.name} icon`} style={{ width: "100%", height: "100%", borderRadius: 10, objectFit: "cover" }} /> : app.icon}
             </div>
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: t.text, lineHeight: 1.3 }}>{app.name}</div>

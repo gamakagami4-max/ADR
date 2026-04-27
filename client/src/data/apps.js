@@ -1,4 +1,4 @@
-export const apps = [
+export const initialApps = [
   {
     id: "automotive",
     icon: "🔧",
@@ -138,9 +138,6 @@ export const apps = [
     users: "650+ active",
   },
 ];
-
-export const ALL_DIVISIONS = ["All", ...Array.from(new Set(apps.map((a) => a.division)))];
-export const ALL_PLATFORMS = ["All", ...Array.from(new Set(apps.map((a) => a.platform)))];
 
 export const FEATURES = [
   "Real-time dashboard with live operational data and KPI tracking",

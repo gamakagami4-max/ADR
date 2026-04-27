@@ -24,7 +24,7 @@ function MoonIcon() {
   );
 }
 
-export default function Navbar({ onLogoClick }) {
+export default function Navbar({ onLogoClick, role, onRoleChange }) {
   const { t, dark, toggle } = useT();
 
   return (
@@ -36,13 +36,23 @@ export default function Navbar({ onLogoClick }) {
         >
           ADR
         </span>
-        <button
-          onClick={toggle}
-          style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 500, padding: "6px 12px", borderRadius: 8, border: `1px solid ${t.border}`, color: t.textSub, background: t.surface, cursor: "pointer" }}
-        >
-          {dark ? <SunIcon /> : <MoonIcon />}
-          {dark ? "Light mode" : "Dark mode"}
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <select
+            value={role}
+            onChange={(e) => onRoleChange(e.target.value)}
+            style={{ fontSize: 12, fontWeight: 600, padding: "6px 10px", borderRadius: 8, border: `1px solid ${t.border}`, color: t.textSub, background: t.surface, cursor: "pointer" }}
+          >
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+          <button
+            onClick={toggle}
+            style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 500, padding: "6px 12px", borderRadius: 8, border: `1px solid ${t.border}`, color: t.textSub, background: t.surface, cursor: "pointer" }}
+          >
+            {dark ? <SunIcon /> : <MoonIcon />}
+            {dark ? "Light mode" : "Dark mode"}
+          </button>
+        </div>
       </div>
     </header>
   );

@@ -6,6 +6,7 @@ import { FEATURES } from "../data/apps";
 
 export default function DetailPage({ app, onBack }) {
   const { t } = useT();
+  const hasImageIcon = typeof app.icon === "string" && (app.icon.startsWith("data:image/") || app.icon.startsWith("http"));
 
   return (
     <main style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px" }}>
@@ -21,7 +22,7 @@ export default function DetailPage({ app, onBack }) {
         <div style={{ padding: 28 }}>
           <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
             <div style={{ width: 68, height: 68, borderRadius: 16, background: t.redLight, border: `1px solid ${t.redBorder}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, flexShrink: 0 }}>
-              {app.icon}
+              {hasImageIcon ? <img src={app.icon} alt={`${app.name} icon`} style={{ width: "100%", height: "100%", borderRadius: 16, objectFit: "cover" }} /> : app.icon}
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
