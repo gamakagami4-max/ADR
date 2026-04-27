@@ -1,0 +1,66 @@
+﻿import { useState } from "react";
+import { useT } from "../../context/ThemeContext";
+import StatusBadge from "../common/StatusBadge";
+import Stars from "../common/Stars";
+import Tag from "../common/Tag";
+
+export default function AppCard({ app, onViewDetail }) {
+  const { t } = useT();
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: t.surface,
+        border: `1px solid ${hovered ? t.red : t.border}`,
+        borderRadius: 12,
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        transition: "border-color 0.15s, box-shadow 0.15s",
+        boxShadow: hovered ? "0 4px 16px rgba(0,0,0,0.1)" : "none",
+      }}
+    >
+      <div style={{ height: 2, background: t.red, opacity: hovered ? 1 : 0, transition: "opacity 0.15s" }} />
+      <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: t.redLight, border: `1px solid ${t.redBorder}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, flexShrink: 0 }}>
+              {app.icon}
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: t.text, lineHeight: 1.3 }}>{app.name}</div>
+              <div style={{ fontSize: 11, color: t.textHint, marginTop: 2 }}>{app.division} Division</div>
+            </div>
+          </div>
+          <StatusBadge status={app.status} />
+        </div>
+
+        <p style={{ fontSize: 12, color: t.textSub, lineHeight: 1.55, flex: 1, margin: 0 }}>{app.tagline}</p>
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+          {app.tags.map((tag) => (
+            <Tag key={tag}>{tag}</Tag>
+          ))}
+        </div>
+
+        <div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <Stars count={app.stars} />
+            <span style={{ fontSize: 11, color: t.textHint }}>
+              {app.rating} ({app.ratingCount})
+            </span>
+          </div>
+          <button
+            onClick={() => onViewDetail(app)}
+            style={{ fontSize: 11, fontWeight: 600, padding: "6px 12px", borderRadius: 8, background: t.red, color: "#fff", border: "none", cursor: "pointer" }}
+          >
+            View Detail →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
