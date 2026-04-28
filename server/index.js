@@ -28,7 +28,7 @@ app.use(express.json({ limit: "15mb" }));
 const appSchema = new mongoose.Schema(
   {
     id: { type: String, required: true, unique: true, trim: true },
-    icon: { type: String, required: true, trim: true },
+    icon: { type: String, trim: true, default: "" },
     name: { type: String, required: true, trim: true },
     division: { type: String, required: true, trim: true },
     version: { type: String, required: true, trim: true },

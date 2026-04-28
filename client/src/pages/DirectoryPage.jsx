@@ -125,7 +125,7 @@ function AddAppModal({ t, onClose, onSubmit, initialApp }) {
   };
 
   const handleScreenshotsUpload = async (e) => {
-    const files = Array.from(e.target.files || []).slice(0, 6);
+    const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
     try {
@@ -143,8 +143,8 @@ function AddAppModal({ t, onClose, onSubmit, initialApp }) {
 
   const handleSubmit = async () => {
     setError("");
-    const { name, division, platform, category, tagline, icon } = app;
-    if (!name.trim() || !division.trim() || !platform || !category.trim() || !tagline.trim() || !icon) {
+    const { name, division, platform, category, tagline } = app;
+    if (!name.trim() || !division.trim() || !platform || !category.trim() || !tagline.trim()) {
       setError("Please complete all required fields.");
       return;
     }
@@ -358,7 +358,7 @@ function AddAppModal({ t, onClose, onSubmit, initialApp }) {
                 </div>
 
                 <div style={{ gridColumn: "1 / -1" }}>
-                  <Field label="App icon" required>
+                  <Field label="App icon">
                     <label style={{
                       display: "flex", alignItems: "center", gap: 12,
                       padding: "12px 14px", border: `1px dashed ${t.border}`,
@@ -409,7 +409,7 @@ function AddAppModal({ t, onClose, onSubmit, initialApp }) {
                             Add screenshots
                           </div>
                           <div style={{ fontSize: 11, color: t.textHint }}>
-                            PNG, JPG or WebP, up to 6 images
+                            PNG, JPG or WebP
                           </div>
                         </div>
                         <div

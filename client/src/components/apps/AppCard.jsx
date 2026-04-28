@@ -1,7 +1,6 @@
 ﻿import { useState } from "react";
 import { useT } from "../../context/ThemeContext";
 import StatusBadge from "../common/StatusBadge";
-import Stars from "../common/Stars";
 import Tag from "../common/Tag";
 
 function IconButton({ label, onClick, children, style }) {
@@ -92,13 +91,7 @@ export default function AppCard({ app, onViewDetail, isAdmin, onEditApp, onDelet
           ))}
         </div>
 
-        <div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <Stars count={app.stars} />
-            <span style={{ fontSize: 11, color: t.textHint }}>
-              {app.rating} ({app.ratingCount})
-            </span>
-          </div>
+        <div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 10, display: "flex", justifyContent: "flex-end" }}>
           <button
             onClick={() => onViewDetail(app)}
             style={{ fontSize: 11, fontWeight: 600, padding: "6px 12px", borderRadius: 8, background: t.red, color: "#fff", border: "none", cursor: "pointer" }}
