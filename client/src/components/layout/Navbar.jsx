@@ -24,7 +24,7 @@ function MoonIcon() {
   );
 }
 
-export default function Navbar({ onLogoClick, role, onRoleChange }) {
+export default function Navbar({ onLogoClick, isAdmin, onOpenAdminLogin, onLogout }) {
   const { t, dark, toggle } = useT();
 
   return (
@@ -37,14 +37,54 @@ export default function Navbar({ onLogoClick, role, onRoleChange }) {
           ADR
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <select
-            value={role}
-            onChange={(e) => onRoleChange(e.target.value)}
-            style={{ fontSize: 12, fontWeight: 600, padding: "6px 10px", borderRadius: 8, border: `1px solid ${t.border}`, color: t.textSub, background: t.surface, cursor: "pointer" }}
-          >
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-          </select>
+          {isAdmin ? (
+            <>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: "6px 10px",
+                  borderRadius: 8,
+                  border: `1px solid ${t.redBorder}`,
+                  color: t.red,
+                  background: t.redLight,
+                }}
+              >
+                Admin
+              </span>
+              <button
+                onClick={onLogout}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: "6px 10px",
+                  borderRadius: 8,
+                  border: `1px solid ${t.border}`,
+                  color: t.textSub,
+                  background: t.surface,
+                  cursor: "pointer",
+                }}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={onOpenAdminLogin}
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                padding: "6px 10px",
+                borderRadius: 8,
+                border: `1px solid ${t.border}`,
+                color: t.textSub,
+                background: t.surface,
+                cursor: "pointer",
+              }}
+            >
+              Admin Login
+            </button>
+          )}
           <button
             onClick={toggle}
             style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 500, padding: "6px 12px", borderRadius: 8, border: `1px solid ${t.border}`, color: t.textSub, background: t.surface, cursor: "pointer" }}
