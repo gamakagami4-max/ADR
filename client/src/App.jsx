@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import Footer from "./components/layout/Footer";
 import Navbar from "./components/layout/Navbar";
 import { DARK, LIGHT, ThemeContext } from "./context/ThemeContext";
-import { initialApps } from "./data/apps";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import DetailPage from "./pages/DetailPage";
 import DirectoryPage from "./pages/DirectoryPage";
@@ -15,7 +14,9 @@ export default function App() {
   const [admin, setAdmin] = useState(null);
   const [page, setPage] = useState("directory");
   const [selectedApp, setSelectedApp] = useState(null);
-  const [apps, setApps] = useState(initialApps);
+  const [apps, setApps] = useState([]);
+  const [appsLoading, setAppsLoading] = useState(true);
+  const [appsError, setAppsError] = useState("");
 
   const theme = { t: dark ? DARK : LIGHT, dark, toggle: () => setDark((d) => !d) };
 
@@ -32,8 +33,69 @@ export default function App() {
   };
 
   const handleAddApp = (newApp) => {
-    setApps((prev) => [newApp, ...prev]);
+    const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+    if (!token) {
+      throw new Error("Please login as admin.");
+    }
+
+    return fetch(`${API_BASE_URL}/api/apps`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(newApp),
+    })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          throw new Error(data.message || "Failed to save app.");
+        }
+        setApps((prev) => [data.app, ...prev]);
+      });
   };
+
+  const handleDeleteApp = (appId) => {
+    const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+    if (!token) {
+      throw new Error("Please login as admin.");
+    }
+
+    return fetch(`${API_BASE_URL}/api/apps/${appId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).then(async (response) => {
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        throw new Error(data.message || "Failed to delete app.");
+      }
+      setApps((prev) => prev.filter((item) => item.id !== appId));
+      goToDirectory();
+    });
+  };
+
+  useEffect(() => {
+    const loadApps = async () => {
+      setAppsLoading(true);
+      setAppsError("");
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/apps`);
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          throw new Error(data.message || "Failed to load apps.");
+        }
+        setApps(data.apps || []);
+      } catch (error) {
+        setAppsError(error.message || "Failed to load apps.");
+      } finally {
+        setAppsLoading(false);
+      }
+    };
+
+    loadApps();
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem(ADMIN_TOKEN_KEY);
@@ -90,9 +152,25 @@ export default function App() {
           onOpenAdminLogin={goToAdminLogin}
           onLogout={handleAdminLogout}
         />
-        {page === "directory" && <DirectoryPage apps={apps} onViewDetail={goToDetail} isAdmin={Boolean(admin)} onAddApp={handleAddApp} />}
+        {page === "directory" && (
+          <DirectoryPage
+            apps={apps}
+            loading={appsLoading}
+            error={appsError}
+            onViewDetail={goToDetail}
+            isAdmin={Boolean(admin)}
+            onAddApp={handleAddApp}
+          />
+        )}
         {page === "admin-login" && <AdminLoginPage onBack={goToDirectory} onLoginSuccess={handleAdminLoginSuccess} />}
-        {page === "detail" && selectedApp && <DetailPage app={selectedApp} onBack={goToDirectory} />}
+        {page === "detail" && selectedApp && (
+          <DetailPage
+            app={selectedApp}
+            onBack={goToDirectory}
+            isAdmin={Boolean(admin)}
+            onDeleteApp={handleDeleteApp}
+          />
+        )}
         <Footer />
       </div>
     </ThemeContext.Provider>

@@ -4,7 +4,7 @@ import { useT } from "../context/ThemeContext";
 import { SectionCard, SectionTitle } from "../components/layout/SectionBlocks";
 
 const PLATFORM_OPTIONS = ["Web", "Android", "iOS", "iOS & Android", "Web & Mobile"];
-const STATUS_OPTIONS = ["beta", "live", "internal"];
+const STATUS_OPTIONS = ["beta", "stable"];
 
 const EMPTY_APP = {
   name: "",
@@ -31,6 +31,8 @@ function Field({ label, required, children }) {
 
 function AddAppModal({ t, onClose, onSubmit }) {
   const [app, setApp] = useState(EMPTY_APP);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const set = (key) => (e) => setApp((prev) => ({ ...prev, [key]: e.target.value }));
 
@@ -42,21 +44,34 @@ function AddAppModal({ t, onClose, onSubmit }) {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    setError("");
     const { name, division, platform, category, tagline, icon } = app;
-    if (!name.trim() || !division.trim() || !platform || !category.trim() || !tagline.trim() || !icon) return;
+    if (!name.trim() || !division.trim() || !platform || !category.trim() || !tagline.trim() || !icon) {
+      setError("Please complete all required fields.");
+      return;
+    }
+
     const id = `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "app"}-${Date.now()}`;
-    onSubmit({
-      id, icon: app.icon, name: name.trim(), division: division.trim(),
-      version: "v1.0.0", platform, access: "Internal", status: app.status,
-      rating: "0.0", ratingCount: "0", stars: 0,
-      tags: [division.trim(), category.trim()],
-      tagline: tagline.trim(), desc: tagline.trim(),
-      about: app.about.trim() || `${name.trim()} is a newly added internal app. Please update this description with detailed business context.`,
-      category: category.trim(), size: "TBD",
-      updated: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
-      users: "0 active",
-    });
+    try {
+      setSaving(true);
+      await onSubmit({
+        id, icon: app.icon, name: name.trim(), division: division.trim(),
+        version: "v1.0.0", platform, access: "Internal", status: app.status,
+        rating: "0.0", ratingCount: "0", stars: 0,
+        tags: [division.trim(), category.trim()],
+        tagline: tagline.trim(), desc: tagline.trim(),
+        about: app.about.trim() || `${name.trim()} is a newly added internal app. Please update this description with detailed business context.`,
+        category: category.trim(), size: "TBD",
+        updated: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+        users: "0 active",
+      });
+      onClose();
+    } catch (submitError) {
+      setError(submitError?.message || "Failed to save app.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const inputStyle = {
@@ -197,6 +212,12 @@ function AddAppModal({ t, onClose, onSubmit }) {
                   </Field>
                 </div>
               </div>
+
+              {error && (
+                <div style={{ marginTop: 12, fontSize: 12, color: t.red }}>
+                  {error}
+                </div>
+              )}
             </div>
 
             {/* Footer */}
@@ -212,9 +233,10 @@ function AddAppModal({ t, onClose, onSubmit }) {
               </button>
               <button
                 onClick={handleSubmit}
-                style={{ fontSize: 12, fontWeight: 600, padding: "8px 16px", borderRadius: 8, background: t.red, color: "#fff", border: "none", cursor: "pointer" }}
+                disabled={saving}
+                style={{ fontSize: 12, fontWeight: 600, padding: "8px 16px", borderRadius: 8, background: t.red, color: "#fff", border: "none", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.85 : 1 }}
               >
-                Save app
+                {saving ? "Saving..." : "Save app"}
               </button>
             </div>
 
@@ -225,7 +247,7 @@ function AddAppModal({ t, onClose, onSubmit }) {
   );
 }
 
-export default function DirectoryPage({ apps, onViewDetail, isAdmin, onAddApp }) {
+export default function DirectoryPage({ apps, loading, error, onViewDetail, isAdmin, onAddApp }) {
   const { t } = useT();
   const [showAddModal, setShowAddModal] = useState(false);
   const [search, setSearch] = useState("");
@@ -271,8 +293,7 @@ export default function DirectoryPage({ apps, onViewDetail, isAdmin, onAddApp })
   };
 
   const handleAddApp = (payload) => {
-    onAddApp(payload);
-    setShowAddModal(false);
+    return onAddApp(payload);
   };
 
   return (
@@ -313,7 +334,15 @@ export default function DirectoryPage({ apps, onViewDetail, isAdmin, onAddApp })
         {search && <span> for <strong style={{ color: t.text }}>&ldquo;{search}&rdquo;</strong></span>}
       </p>
 
-      {filtered.length > 0 ? (
+      {loading ? (
+        <div style={{ textAlign: "center", padding: "70px 0", color: t.textHint, fontSize: 13 }}>
+          Loading applications...
+        </div>
+      ) : error ? (
+        <div style={{ textAlign: "center", padding: "70px 0", color: t.red, fontSize: 13 }}>
+          {error}
+        </div>
+      ) : filtered.length > 0 ? (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
           {filtered.map((app) => <AppCard key={app.id} app={app} onViewDetail={onViewDetail} />)}
         </div>

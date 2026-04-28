@@ -1,12 +1,29 @@
+import { useState } from "react";
 import StatusBadge from "../components/common/StatusBadge";
 import Tag from "../components/common/Tag";
 import { InfoRow, SectionCard, SectionTitle } from "../components/layout/SectionBlocks";
 import { useT } from "../context/ThemeContext";
-import { FEATURES } from "../data/apps";
+import { FEATURES } from "../data/features";
 
-export default function DetailPage({ app, onBack }) {
+export default function DetailPage({ app, onBack, isAdmin, onDeleteApp }) {
   const { t } = useT();
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const hasImageIcon = typeof app.icon === "string" && (app.icon.startsWith("data:image/") || app.icon.startsWith("http"));
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm(`Delete "${app.name}"? This cannot be undone.`);
+    if (!confirmed) return;
+
+    setDeleteError("");
+    setDeleting(true);
+    try {
+      await onDeleteApp(app.id);
+    } catch (error) {
+      setDeleteError(error?.message || "Failed to delete app.");
+      setDeleting(false);
+    }
+  };
 
   return (
     <main style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px" }}>
@@ -31,6 +48,28 @@ export default function DetailPage({ app, onBack }) {
                 <span style={{ fontSize: 10, fontFamily: "monospace", color: t.textHint, background: t.tag, border: `1px solid ${t.border}`, padding: "2px 6px", borderRadius: 5 }}>{app.version}</span>
               </div>
               <p style={{ fontSize: 13, color: t.textSub, lineHeight: 1.6, marginBottom: 16 }}>{app.desc}</p>
+              {isAdmin && (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      padding: "8px 12px",
+                      borderRadius: 8,
+                      border: `1px solid ${t.redBorder}`,
+                      background: t.redLight,
+                      color: t.red,
+                      cursor: deleting ? "not-allowed" : "pointer",
+                      opacity: deleting ? 0.8 : 1,
+                    }}
+                  >
+                    {deleting ? "Deleting..." : "Delete App"}
+                  </button>
+                  {deleteError && <span style={{ fontSize: 12, color: t.red }}>{deleteError}</span>}
+                </div>
+              )}
             </div>
           </div>
         </div>
