@@ -6,7 +6,7 @@ import AdminLoginPage from "./pages/AdminLoginPage";
 import DetailPage from "./pages/DetailPage";
 import DirectoryPage from "./pages/DirectoryPage";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:5000" : "");
 const ADMIN_TOKEN_KEY = "adr_admin_token";
 
 function summarizeAppPayload(app) {

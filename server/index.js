@@ -15,6 +15,7 @@ const DNS_SERVERS = process.env.MONGODB_DNS_SERVERS || "8.8.8.8,1.1.1.1";
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "Admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const JWT_SECRET = process.env.JWT_SECRET || "change-this-secret";
+let databaseReadyPromise = null;
 
 dns.setServers(
   DNS_SERVERS.split(",")
@@ -303,6 +304,34 @@ async function seedDefaultAppsIfEmpty() {
   console.log(`Seeded ${defaultApps.length} default apps into MongoDB.`);
 }
 
+async function ensureDatabase() {
+  if (!MONGODB_URI) {
+    throw new Error("Missing MONGODB_URI in environment variables.");
+  }
+
+  if (mongoose.connection.readyState === 1) {
+    return;
+  }
+
+  if (mongoose.connection.readyState === 2) {
+    return databaseReadyPromise;
+  }
+
+  if (!databaseReadyPromise) {
+    databaseReadyPromise = mongoose.connect(MONGODB_URI)
+      .then(async () => {
+        console.log("MongoDB connected successfully.");
+        await seedDefaultAppsIfEmpty();
+      })
+      .catch((error) => {
+        databaseReadyPromise = null;
+        throw error;
+      });
+  }
+
+  return databaseReadyPromise;
+}
+
 async function startServer() {
   if (!MONGODB_URI) {
     console.error("Missing MONGODB_URI in environment variables.");
@@ -310,9 +339,7 @@ async function startServer() {
   }
 
   try {
-    await mongoose.connect(MONGODB_URI);
-    console.log("MongoDB connected successfully.");
-    await seedDefaultAppsIfEmpty();
+    await ensureDatabase();
 
     app.listen(PORT, () => {
       console.log(`Server listening on http://localhost:${PORT}`);
@@ -323,4 +350,8 @@ async function startServer() {
   }
 }
 
-startServer();
+module.exports = { app, ensureDatabase, startServer };
+
+if (require.main === module) {
+  startServer();
+}
