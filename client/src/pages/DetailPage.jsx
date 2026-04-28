@@ -103,9 +103,9 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
             {features.length > 0 ? (
               <ul style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: 0, margin: 0, listStyle: "none" }}>
                 {features.map((feature, index) => (
-                  <li key={index} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: t.textSub, lineHeight: 1.45 }}>
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: t.red, flexShrink: 0, marginTop: 4 }} />
-                    {feature}
+                  <li key={index} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: t.textSub, lineHeight: 1.45 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: t.red, flexShrink: 0 }} />
+                    <span>{feature}</span>
                   </li>
                 ))}
               </ul>
