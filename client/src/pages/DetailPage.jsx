@@ -3,13 +3,14 @@ import StatusBadge from "../components/common/StatusBadge";
 import Tag from "../components/common/Tag";
 import { InfoRow, SectionCard, SectionTitle } from "../components/layout/SectionBlocks";
 import { useT } from "../context/ThemeContext";
-import { FEATURES } from "../data/features";
 
-export default function DetailPage({ app, onBack, isAdmin, onDeleteApp }) {
+export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditApp }) {
   const { t } = useT();
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const hasImageIcon = typeof app.icon === "string" && (app.icon.startsWith("data:image/") || app.icon.startsWith("http"));
+  const features = Array.isArray(app.features) ? app.features : [];
+  const screenshots = Array.isArray(app.screenshots) ? app.screenshots : [];
 
   const handleDelete = async () => {
     const confirmed = window.confirm(`Delete "${app.name}"? This cannot be undone.`);
@@ -51,6 +52,21 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp }) {
               {isAdmin && (
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                   <button
+                    onClick={() => onEditApp(app)}
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      padding: "8px 12px",
+                      borderRadius: 8,
+                      border: `1px solid ${t.border}`,
+                      background: t.tag,
+                      color: t.text,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Edit App
+                  </button>
+                  <button
                     onClick={handleDelete}
                     disabled={deleting}
                     style={{
@@ -84,26 +100,38 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp }) {
 
           <SectionCard>
             <SectionTitle>Key features</SectionTitle>
-            <ul style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: 0, margin: 0, listStyle: "none" }}>
-              {FEATURES.map((feature, index) => (
-                <li key={index} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: t.textSub, lineHeight: 1.45 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: t.red, flexShrink: 0, marginTop: 4 }} />
-                  {feature}
-                </li>
-              ))}
-            </ul>
+            {features.length > 0 ? (
+              <ul style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: 0, margin: 0, listStyle: "none" }}>
+                {features.map((feature, index) => (
+                  <li key={index} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: t.textSub, lineHeight: 1.45 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: t.red, flexShrink: 0, marginTop: 4 }} />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p style={{ margin: 0, fontSize: 12, color: t.textHint }}>No key features have been added for this app yet.</p>
+            )}
           </SectionCard>
 
           <SectionCard>
             <SectionTitle>Screenshots</SectionTitle>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-              {[1, 2, 3].map((screen) => (
-                <div key={screen} style={{ background: t.tag, border: `1px solid ${t.border}`, borderRadius: 12, aspectRatio: "9/16", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 10, color: t.textHint }}>
-                  <span style={{ fontSize: 22, opacity: 0.2 }}>📱</span>
-                  Screen {screen}
-                </div>
-              ))}
-            </div>
+            {screenshots.length > 0 ? (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
+                {screenshots.map((src, index) => (
+                  <img
+                    key={`${index}-${src.slice(0, 24)}`}
+                    src={src}
+                    alt={`${app.name} screenshot ${index + 1}`}
+                    style={{ width: "100%", borderRadius: 12, border: `1px solid ${t.border}`, aspectRatio: "9/16", objectFit: "cover", background: t.tag }}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div style={{ background: t.tag, border: `1px solid ${t.border}`, borderRadius: 12, padding: 20, fontSize: 12, color: t.textHint }}>
+                No screenshots have been uploaded for this app yet.
+              </div>
+            )}
           </SectionCard>
         </div>
 

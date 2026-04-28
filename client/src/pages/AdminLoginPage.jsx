@@ -49,7 +49,7 @@ export default function AdminLoginPage({ onBack, onLoginSuccess }) {
       }
 
       onLoginSuccess(data);
-    } catch (_err) {
+    } catch {
       setError("Unable to reach server. Please make sure backend is running.");
     } finally {
       setLoading(false);

@@ -16,6 +16,8 @@ const EMPTY_APP = {
   status: "beta",
   icon: "",
   iconName: "",
+  features: [""],
+  screenshots: [],
 };
 
 function Field({ label, required, children }) {
@@ -29,19 +31,114 @@ function Field({ label, required, children }) {
   );
 }
 
-function AddAppModal({ t, onClose, onSubmit }) {
-  const [app, setApp] = useState(EMPTY_APP);
+function mapAppToForm(app) {
+  return {
+    name: app?.name || "",
+    division: app?.division || "",
+    platform: app?.platform || "",
+    category: app?.category || "",
+    tagline: app?.tagline || "",
+    about: app?.about || "",
+    status: app?.status || "beta",
+    icon: app?.icon || "",
+    iconName: "",
+    features: Array.isArray(app?.features) && app.features.length > 0 ? app.features : [""],
+    screenshots: Array.isArray(app?.screenshots) ? app.screenshots : [],
+  };
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function optimizeImage(file, { maxWidth, maxHeight, quality = 0.82 }) {
+  const source = await readFileAsDataUrl(file);
+
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      const scale = Math.min(maxWidth / image.width, maxHeight / image.height, 1);
+      const width = Math.max(1, Math.round(image.width * scale));
+      const height = Math.max(1, Math.round(image.height * scale));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const context = canvas.getContext("2d");
+      if (!context) {
+        resolve(source);
+        return;
+      }
+
+      context.drawImage(image, 0, 0, width, height);
+
+      const optimized = canvas.toDataURL("image/jpeg", quality);
+      resolve(optimized);
+    };
+    image.onerror = () => reject(new Error(`Failed to process ${file.name}`));
+    image.src = source;
+  });
+}
+
+function AddAppModal({ t, onClose, onSubmit, initialApp }) {
+  const [app, setApp] = useState(() => (initialApp ? mapAppToForm(initialApp) : EMPTY_APP));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const isEditing = Boolean(initialApp);
 
   const set = (key) => (e) => setApp((prev) => ({ ...prev, [key]: e.target.value }));
+  const setFeature = (index) => (e) =>
+    setApp((prev) => ({
+      ...prev,
+      features: prev.features.map((feature, featureIndex) => (featureIndex === index ? e.target.value : feature)),
+    }));
 
-  const handleIconUpload = (e) => {
+  const addFeatureField = () =>
+    setApp((prev) => ({
+      ...prev,
+      features: [...prev.features, ""],
+    }));
+
+  const removeFeatureField = (index) =>
+    setApp((prev) => ({
+      ...prev,
+      features: prev.features.length === 1 ? [""] : prev.features.filter((_, featureIndex) => featureIndex !== index),
+    }));
+
+  const handleIconUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setApp((prev) => ({ ...prev, icon: String(reader.result), iconName: file.name }));
-    reader.readAsDataURL(file);
+    try {
+      const icon = await optimizeImage(file, { maxWidth: 512, maxHeight: 512, quality: 0.85 });
+      setApp((prev) => ({ ...prev, icon, iconName: file.name }));
+    } catch {
+      setError("Failed to process the app icon.");
+    } finally {
+      e.target.value = "";
+    }
+  };
+
+  const handleScreenshotsUpload = async (e) => {
+    const files = Array.from(e.target.files || []).slice(0, 6);
+    if (!files.length) return;
+
+    try {
+      const screenshots = await Promise.all(
+        files.map((file) => optimizeImage(file, { maxWidth: 1440, maxHeight: 1440, quality: 0.82 }))
+      );
+
+      setApp((prev) => ({ ...prev, screenshots }));
+    } catch {
+      setError("Failed to read one or more screenshots.");
+    } finally {
+      e.target.value = "";
+    }
   };
 
   const handleSubmit = async () => {
@@ -53,18 +150,32 @@ function AddAppModal({ t, onClose, onSubmit }) {
     }
 
     const id = `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "app"}-${Date.now()}`;
+    const features = app.features.map((item) => item.trim()).filter(Boolean);
+
     try {
       setSaving(true);
       await onSubmit({
-        id, icon: app.icon, name: name.trim(), division: division.trim(),
-        version: "v1.0.0", platform, access: "Internal", status: app.status,
-        rating: "0.0", ratingCount: "0", stars: 0,
+        id: initialApp?.id || id,
+        icon: app.icon,
+        name: name.trim(),
+        division: division.trim(),
+        version: initialApp?.version || "v1.0.0",
+        platform,
+        access: initialApp?.access || "Internal",
+        status: app.status,
+        rating: initialApp?.rating || "0.0",
+        ratingCount: initialApp?.ratingCount || "0",
+        stars: initialApp?.stars || 0,
         tags: [division.trim(), category.trim()],
-        tagline: tagline.trim(), desc: tagline.trim(),
+        tagline: tagline.trim(),
+        desc: tagline.trim(),
         about: app.about.trim() || `${name.trim()} is a newly added internal app. Please update this description with detailed business context.`,
-        category: category.trim(), size: "TBD",
+        category: category.trim(),
+        size: initialApp?.size || "TBD",
         updated: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
-        users: "0 active",
+        users: initialApp?.users || "0 active",
+        features,
+        screenshots: app.screenshots,
       });
       onClose();
     } catch (submitError) {
@@ -78,6 +189,19 @@ function AddAppModal({ t, onClose, onSubmit }) {
     background: t.input, border: `1px solid ${t.border}`, borderRadius: 8,
     padding: "9px 11px", fontSize: 13, color: t.text, outline: "none",
     width: "100%", boxSizing: "border-box", fontFamily: "inherit",
+  };
+  const selectStyle = {
+    ...inputStyle,
+    appearance: "none",
+    WebkitAppearance: "none",
+    MozAppearance: "none",
+    padding: "9px 40px 9px 11px",
+    cursor: "pointer",
+    backgroundImage: `linear-gradient(45deg, transparent 50%, ${t.textHint} 50%), linear-gradient(135deg, ${t.textHint} 50%, transparent 50%)`,
+    backgroundPosition: "calc(100% - 18px) calc(50% - 3px), calc(100% - 12px) calc(50% - 3px)",
+    backgroundSize: "6px 6px, 6px 6px",
+    backgroundRepeat: "no-repeat",
+    boxShadow: `inset 0 1px 0 ${t.surface}`,
   };
 
   return (
@@ -125,9 +249,9 @@ function AddAppModal({ t, onClose, onSubmit }) {
 
             {/* Header */}
             <div className="add-modal-header" style={{ padding: "20px 24px 0", flexShrink: 0 }}>
-              <SectionTitle>Add new app</SectionTitle>
+              <SectionTitle>{isEditing ? "Edit app" : "Add new app"}</SectionTitle>
               <p style={{ margin: "4px 0 18px", fontSize: 12, color: t.textHint, lineHeight: 1.6 }}>
-                Create a new internal app entry. Fields marked <span style={{ color: "#e24b4a" }}>*</span> are required.
+                {isEditing ? "Update the selected app entry." : "Create a new internal app entry."} Fields marked <span style={{ color: "#e24b4a" }}>*</span> are required.
               </p>
             </div>
 
@@ -152,14 +276,14 @@ function AddAppModal({ t, onClose, onSubmit }) {
                 </Field>
 
                 <Field label="Platform" required>
-                  <select style={inputStyle} value={app.platform} onChange={set("platform")}>
+                  <select style={selectStyle} value={app.platform} onChange={set("platform")}>
                     <option value="">Select platform</option>
                     {PLATFORM_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </Field>
 
                 <Field label="Status">
-                  <select style={inputStyle} value={app.status} onChange={set("status")}>
+                  <select style={selectStyle} value={app.status} onChange={set("status")}>
                     {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                   </select>
                 </Field>
@@ -178,6 +302,58 @@ function AddAppModal({ t, onClose, onSubmit }) {
                       value={app.about}
                       onChange={set("about")}
                     />
+                  </Field>
+                </div>
+
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <Field label="Key features">
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {app.features.map((feature, index) => (
+                        <div key={index} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                          <input
+                            style={inputStyle}
+                            type="text"
+                            placeholder={index === 0 ? "Example: Real-time stock visibility" : `Feature ${index + 1}`}
+                            value={feature}
+                            onChange={setFeature(index)}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeFeatureField(index)}
+                            style={{
+                              flexShrink: 0,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              padding: "8px 10px",
+                              borderRadius: 8,
+                              background: t.surface,
+                              color: t.textSub,
+                              border: `1px solid ${t.border}`,
+                              cursor: "pointer",
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={addFeatureField}
+                        style={{
+                          alignSelf: "flex-start",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          padding: "8px 12px",
+                          borderRadius: 8,
+                          background: t.tag,
+                          color: t.text,
+                          border: `1px solid ${t.border}`,
+                          cursor: "pointer",
+                        }}
+                      >
+                        + Add feature
+                      </button>
+                    </div>
                   </Field>
                 </div>
 
@@ -211,6 +387,86 @@ function AddAppModal({ t, onClose, onSubmit }) {
                     </label>
                   </Field>
                 </div>
+
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <Field label="Screenshots">
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      <label
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 14,
+                          padding: "14px 16px",
+                          border: `1px solid ${t.border}`,
+                          borderRadius: 10,
+                          background: t.surface,
+                          cursor: "pointer",
+                        }}
+                      >
+                        <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                          <div style={{ fontSize: 12, color: t.text, fontWeight: 600 }}>
+                            Add screenshots
+                          </div>
+                          <div style={{ fontSize: 11, color: t.textHint }}>
+                            PNG, JPG or WebP, up to 6 images
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            flexShrink: 0,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            padding: "8px 12px",
+                            borderRadius: 8,
+                            background: t.tag,
+                            color: t.text,
+                            border: `1px solid ${t.border}`,
+                          }}
+                        >
+                          Choose files
+                        </div>
+                        <input type="file" accept="image/*" multiple onChange={handleScreenshotsUpload} style={{ display: "none" }} />
+                      </label>
+                      {app.screenshots.length > 0 && (
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(92px, 1fr))", gap: 10 }}>
+                          {app.screenshots.map((src, index) => (
+                            <div key={`${index}-${src.slice(0, 24)}`} style={{ position: "relative" }}>
+                              <img
+                                src={src}
+                                alt={`Screenshot ${index + 1}`}
+                                style={{ width: "100%", aspectRatio: "9 / 16", objectFit: "cover", borderRadius: 10, border: `1px solid ${t.border}` }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setApp((prev) => ({
+                                    ...prev,
+                                    screenshots: prev.screenshots.filter((_, screenshotIndex) => screenshotIndex !== index),
+                                  }))
+                                }
+                                style={{
+                                  position: "absolute",
+                                  top: 6,
+                                  right: 6,
+                                  width: 24,
+                                  height: 24,
+                                  borderRadius: 999,
+                                  border: "none",
+                                  background: "rgba(19, 28, 45, 0.85)",
+                                  color: "#fff",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </Field>
+                </div>
               </div>
 
               {error && (
@@ -236,7 +492,7 @@ function AddAppModal({ t, onClose, onSubmit }) {
                 disabled={saving}
                 style={{ fontSize: 12, fontWeight: 600, padding: "8px 16px", borderRadius: 8, background: t.red, color: "#fff", border: "none", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.85 : 1 }}
               >
-                {saving ? "Saving..." : "Save app"}
+                {saving ? "Saving..." : isEditing ? "Save changes" : "Save app"}
               </button>
             </div>
 
@@ -247,7 +503,19 @@ function AddAppModal({ t, onClose, onSubmit }) {
   );
 }
 
-export default function DirectoryPage({ apps, loading, error, onViewDetail, isAdmin, onAddApp }) {
+export default function DirectoryPage({
+  apps,
+  loading,
+  error,
+  onViewDetail,
+  isAdmin,
+  onAddApp,
+  onUpdateApp,
+  onDeleteApp,
+  editingApp,
+  onEditApp,
+  onCloseEditApp,
+}) {
   const { t } = useT();
   const [showAddModal, setShowAddModal] = useState(false);
   const [search, setSearch] = useState("");
@@ -292,8 +560,41 @@ export default function DirectoryPage({ apps, loading, error, onViewDetail, isAd
     cursor: "pointer",
   };
 
-  const handleAddApp = (payload) => {
+  const handleOpenAddModal = () => {
+    // Close any active edit before opening the add modal
+    onCloseEditApp();
+    setShowAddModal(true);
+  };
+
+  // FIX: AppCard calls onDeleteApp(app) with the full object.
+  // We unwrap to app.id here before forwarding to the parent handler
+  // which expects only the id string — keeping the confirm dialog local.
+  const handleDeleteAppFromCard = async (app) => {
+    const confirmed = window.confirm(`Delete "${app.name}"? This cannot be undone.`);
+    if (!confirmed) return;
+    await onDeleteApp(app.id);
+  };
+
+  // FIX: capture editingApp in a local variable at the time the submit
+  // button is clicked, so it can't be cleared by a concurrent state update
+  // before the conditional branch runs.
+  const handleSubmitApp = (payload) => {
+    const currentEditingApp = editingApp;
+    console.log("[DirectoryPage] Submitting modal", {
+      mode: currentEditingApp ? "edit" : "create",
+      editingAppId: currentEditingApp?.id || null,
+      payloadId: payload?.id,
+      payloadName: payload?.name,
+    });
+    if (currentEditingApp) {
+      return onUpdateApp(currentEditingApp.id, payload);
+    }
     return onAddApp(payload);
+  };
+
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    onCloseEditApp();
   };
 
   return (
@@ -321,7 +622,7 @@ export default function DirectoryPage({ apps, loading, error, onViewDetail, isAd
         </select>
         {isAdmin && (
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={handleOpenAddModal}
             style={{ fontSize: 12, fontWeight: 600, padding: "8px 12px", borderRadius: 8, background: t.red, color: "#fff", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}
           >
             + Add App
@@ -344,7 +645,16 @@ export default function DirectoryPage({ apps, loading, error, onViewDetail, isAd
         </div>
       ) : filtered.length > 0 ? (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
-          {filtered.map((app) => <AppCard key={app.id} app={app} onViewDetail={onViewDetail} />)}
+          {filtered.map((app) => (
+            <AppCard
+              key={app.id}
+              app={app}
+              onViewDetail={onViewDetail}
+              isAdmin={isAdmin}
+              onEditApp={onEditApp}
+              onDeleteApp={handleDeleteAppFromCard}
+            />
+          ))}
         </div>
       ) : (
         <div style={{ textAlign: "center", padding: "80px 0" }}>
@@ -359,8 +669,14 @@ export default function DirectoryPage({ apps, loading, error, onViewDetail, isAd
         </div>
       )}
 
-      {isAdmin && showAddModal && (
-        <AddAppModal t={t} onClose={() => setShowAddModal(false)} onSubmit={handleAddApp} />
+      {isAdmin && (showAddModal || Boolean(editingApp)) && (
+        <AddAppModal
+          key={editingApp?.id || "new-app"}
+          t={t}
+          onClose={handleCloseModal}
+          onSubmit={handleSubmitApp}
+          initialApp={editingApp || null}
+        />
       )}
     </main>
   );

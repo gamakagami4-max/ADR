@@ -20,6 +20,12 @@ const defaultApps = [
     size: "48.2 MB",
     updated: "12 Apr 2026",
     users: "1,200+ active",
+    features: [
+      "Track OEM orders and production milestones in one place",
+      "Monitor quality inspection logs across multiple plants",
+      "Coordinate supplier updates and delivery schedules",
+    ],
+    screenshots: [],
   },
   {
     id: "agro",
@@ -42,6 +48,12 @@ const defaultApps = [
     size: "32.7 MB",
     updated: "3 Mar 2026",
     users: "420+ active",
+    features: [
+      "Capture plantation activity updates while offline",
+      "Monitor harvest volumes and MDF mill operations",
+      "Sync field reports automatically when connectivity returns",
+    ],
+    screenshots: [],
   },
   {
     id: "distribution",
@@ -64,6 +76,12 @@ const defaultApps = [
     size: "54.9 MB",
     updated: "10 Apr 2026",
     users: "2,100+ active",
+    features: [
+      "See stock and dispatch updates in real time",
+      "Coordinate warehouse fulfillment across regional offices",
+      "Track outbound logistics and delivery execution",
+    ],
+    screenshots: [],
   },
 ];
 

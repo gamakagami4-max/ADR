@@ -4,7 +4,32 @@ import StatusBadge from "../common/StatusBadge";
 import Stars from "../common/Stars";
 import Tag from "../common/Tag";
 
-export default function AppCard({ app, onViewDetail }) {
+function IconButton({ label, onClick, children, style }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      style={{
+        width: 30,
+        height: 30,
+        borderRadius: 8,
+        border: "none",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        fontSize: 14,
+        ...style,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+export default function AppCard({ app, onViewDetail, isAdmin, onEditApp, onDeleteApp }) {
   const { t } = useT();
   const [hovered, setHovered] = useState(false);
   const hasImageIcon = typeof app.icon === "string" && (app.icon.startsWith("data:image/") || app.icon.startsWith("http"));
@@ -36,7 +61,27 @@ export default function AppCard({ app, onViewDetail }) {
               <div style={{ fontSize: 11, color: t.textHint, marginTop: 2 }}>{app.division} Division</div>
             </div>
           </div>
-          <StatusBadge status={app.status} />
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <StatusBadge status={app.status} />
+            {isAdmin && (
+              <>
+                <IconButton
+                  label={`Edit ${app.name}`}
+                  onClick={() => onEditApp(app)}
+                  style={{ background: t.tag, color: t.textSub, border: `1px solid ${t.border}` }}
+                >
+                  ✎
+                </IconButton>
+                <IconButton
+                  label={`Delete ${app.name}`}
+                  onClick={() => onDeleteApp(app)}
+                  style={{ background: t.redLight, color: t.red, border: `1px solid ${t.redBorder}` }}
+                >
+                  🗑
+                </IconButton>
+              </>
+            )}
+          </div>
         </div>
 
         <p style={{ fontSize: 12, color: t.textSub, lineHeight: 1.55, flex: 1, margin: 0 }}>{app.tagline}</p>

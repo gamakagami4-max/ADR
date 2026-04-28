@@ -23,7 +23,7 @@ dns.setServers(
 );
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "15mb" }));
 
 const appSchema = new mongoose.Schema(
   {
@@ -46,11 +46,25 @@ const appSchema = new mongoose.Schema(
     size: { type: String, default: "TBD", trim: true },
     updated: { type: String, required: true, trim: true },
     users: { type: String, default: "0 active", trim: true },
+    features: [{ type: String, trim: true }],
+    screenshots: [{ type: String, trim: true }],
   },
   { timestamps: true, versionKey: false }
 );
 
 const AppModel = mongoose.model("App", appSchema);
+
+// Build a query that matches either the custom `id` string field OR the
+// MongoDB ObjectId `_id` — whichever the client happens to send.
+// This makes PUT and DELETE resilient to seeded docs that may have been
+// created before the custom `id` field was consistently populated.
+function buildIdQuery(paramId) {
+  const isObjectId = /^[a-f\d]{24}$/i.test(paramId);
+  if (isObjectId) {
+    return { $or: [{ id: paramId }, { _id: paramId }] };
+  }
+  return { id: paramId };
+}
 
 app.get("/api/health", async (_req, res) => {
   let dbState = "disconnected";
@@ -89,6 +103,22 @@ function authenticateAdmin(req, res, next) {
       message: "Invalid or expired token.",
     });
   }
+}
+
+function summarizeRequestApp(payload) {
+  return {
+    id: payload?.id,
+    name: payload?.name,
+    division: payload?.division,
+    platform: payload?.platform,
+    category: payload?.category,
+    featuresCount: Array.isArray(payload?.features) ? payload.features.length : 0,
+    screenshotsCount: Array.isArray(payload?.screenshots) ? payload.screenshots.length : 0,
+    iconLength: typeof payload?.icon === "string" ? payload.icon.length : 0,
+    screenshotLengths: Array.isArray(payload?.screenshots)
+      ? payload.screenshots.map((item) => (typeof item === "string" ? item.length : 0))
+      : [],
+  };
 }
 
 app.post("/api/admin/login", (req, res) => {
@@ -160,9 +190,12 @@ app.get("/api/apps", async (_req, res) => {
 app.post("/api/apps", authenticateAdmin, async (req, res) => {
   try {
     const payload = req.body || {};
+    console.log("[POST /api/apps] Incoming payload", summarizeRequestApp(payload));
     const app = await AppModel.create(payload);
+    console.log("[POST /api/apps] Created app", { id: app.id, name: app.name });
     return res.status(201).json({ ok: true, app });
   } catch (error) {
+    console.error("[POST /api/apps] Failed", error.message);
     if (error?.code === 11000) {
       return res.status(409).json({
         ok: false,
@@ -179,11 +212,13 @@ app.post("/api/apps", authenticateAdmin, async (req, res) => {
 
 app.delete("/api/apps/:id", authenticateAdmin, async (req, res) => {
   try {
-    const deleted = await AppModel.findOneAndDelete({ id: req.params.id });
+    const query = buildIdQuery(req.params.id);
+    console.log(`[DELETE /api/apps/${req.params.id}] Query`, query);
+    const deleted = await AppModel.findOneAndDelete(query);
     if (!deleted) {
       return res.status(404).json({
         ok: false,
-        message: "App not found.",
+        message: `App not found (id: ${req.params.id}).`,
       });
     }
     return res.status(200).json({
@@ -197,6 +232,68 @@ app.delete("/api/apps/:id", authenticateAdmin, async (req, res) => {
       error: error.message,
     });
   }
+});
+
+app.put("/api/apps/:id", authenticateAdmin, async (req, res) => {
+  try {
+    const payload = req.body || {};
+    const query = buildIdQuery(req.params.id);
+    console.log(`[PUT /api/apps/${req.params.id}] Query`, query, "Payload", summarizeRequestApp(payload));
+    const updated = await AppModel.findOneAndUpdate(
+      query,
+      payload,
+      { new: true, runValidators: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        ok: false,
+        message: `App not found (id: ${req.params.id}). It may have been deleted or the id is incorrect.`,
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      app: updated,
+    });
+  } catch (error) {
+    console.error(`[PUT /api/apps/${req.params.id}] Failed`, error.message);
+    return res.status(400).json({
+      ok: false,
+      message: "Failed to update application.",
+      error: error.message,
+    });
+  }
+});
+
+app.use((error, _req, res, next) => {
+  if (!error) {
+    return next();
+  }
+
+  console.error("[Server] Unhandled request error", {
+    type: error.type,
+    message: error.message,
+    status: error.status,
+    limit: error.limit,
+    length: error.length,
+  });
+
+  if (error.type === "entity.too.large") {
+    return res.status(413).json({
+      ok: false,
+      message: "Request payload is too large.",
+      error: error.message,
+      limit: error.limit,
+      length: error.length,
+    });
+  }
+
+  return res.status(error.status || 500).json({
+    ok: false,
+    message: "Unexpected server error.",
+    error: error.message,
+  });
 });
 
 async function seedDefaultAppsIfEmpty() {
