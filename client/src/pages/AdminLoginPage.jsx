@@ -95,7 +95,7 @@ export default function AdminLoginPage({ onBack, onLoginSuccess }) {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder={locale === "id" ? "Admin" : "Admin"}
+              placeholder={locale === "id" ? "Masukkan Nama pengguna" : "Enter Username"}
               style={inputStyle}
               autoComplete="username"
             />
