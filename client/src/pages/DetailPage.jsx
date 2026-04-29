@@ -1,5 +1,4 @@
 import { useState } from "react";
-import StatusBadge from "../components/common/StatusBadge";
 import Tag from "../components/common/Tag";
 import { InfoRow, SectionCard, SectionTitle } from "../components/layout/SectionBlocks";
 import { useT } from "../context/ThemeContext";
@@ -45,8 +44,6 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
             <div style={{ flex: 1 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
                 <h1 style={{ fontSize: 20, fontWeight: 700, color: t.text, margin: 0 }}>{app.name}</h1>
-                <StatusBadge status={app.status} />
-                <span style={{ fontSize: 10, fontFamily: "monospace", color: t.textHint, background: t.tag, border: `1px solid ${t.border}`, padding: "2px 6px", borderRadius: 5 }}>{app.version}</span>
               </div>
               <p style={{ fontSize: 13, color: t.textSub, lineHeight: 1.6, marginBottom: 16 }}>{app.desc}</p>
               {isAdmin && (
@@ -139,14 +136,11 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
           <SectionCard>
             <SectionTitle>{locale === "id" ? "Info aplikasi" : "App info"}</SectionTitle>
             {[
-              [locale === "id" ? "Versi" : "Version", app.version],
               [locale === "id" ? "Divisi" : "Division", app.division],
               [locale === "id" ? "Kategori" : "Category", app.category],
               [locale === "id" ? "Platform" : "Platform", app.platform],
               [locale === "id" ? "Akses" : "Access", app.access],
-              [locale === "id" ? "Ukuran" : "Size", app.size],
               [locale === "id" ? "Diperbarui" : "Updated", app.updated],
-              [locale === "id" ? "Pengguna Aktif" : "Active Users", app.users],
             ].map(([label, value]) => (
               <InfoRow key={label} label={label} value={value} />
             ))}
@@ -161,11 +155,6 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
             </div>
           </SectionCard>
 
-          <SectionCard>
-            <SectionTitle>{locale === "id" ? "Dukungan" : "Support"}</SectionTitle>
-            <InfoRow label={locale === "id" ? "Kontak" : "Contact"} value="apps@adr-group.co.id" valueStyle={{ color: t.red }} />
-            <InfoRow label={locale === "id" ? "Jam" : "Hours"} value="Mon-Fri, 08-17 WIB" />
-          </SectionCard>
         </div>
       </div>
     </main>

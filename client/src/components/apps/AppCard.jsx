@@ -1,6 +1,5 @@
 ﻿import { useState } from "react";
 import { useT } from "../../context/ThemeContext";
-import StatusBadge from "../common/StatusBadge";
 import Tag from "../common/Tag";
 
 function IconButton({ label, onClick, children, style }) {
@@ -61,7 +60,6 @@ export default function AppCard({ app, onViewDetail, isAdmin, onEditApp, onDelet
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <StatusBadge status={app.status} />
             {isAdmin && (
               <>
                 <IconButton
