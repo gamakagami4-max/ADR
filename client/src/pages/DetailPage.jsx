@@ -5,7 +5,7 @@ import { InfoRow, SectionCard, SectionTitle } from "../components/layout/Section
 import { useT } from "../context/ThemeContext";
 
 export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditApp }) {
-  const { t } = useT();
+  const { t, tr, locale } = useT();
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const hasImageIcon = typeof app.icon === "string" && (app.icon.startsWith("data:image/") || app.icon.startsWith("http"));
@@ -32,7 +32,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
         onClick={onBack}
         style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: t.textHint, background: "none", border: "none", cursor: "pointer", marginBottom: 24, padding: 0 }}
       >
-        ← Back to App Directory
+        ← {tr("detailBack")}
       </button>
 
       <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 14, overflow: "hidden", marginBottom: 20 }}>
@@ -64,7 +64,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
                       cursor: "pointer",
                     }}
                   >
-                    Edit App
+                    {locale === "id" ? "Edit Aplikasi" : "Edit App"}
                   </button>
                   <button
                     onClick={handleDelete}
@@ -81,7 +81,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
                       opacity: deleting ? 0.8 : 1,
                     }}
                   >
-                    {deleting ? "Deleting..." : "Delete App"}
+                    {deleting ? (locale === "id" ? "Menghapus..." : "Deleting...") : (locale === "id" ? "Hapus Aplikasi" : "Delete App")}
                   </button>
                   {deleteError && <span style={{ fontSize: 12, color: t.red }}>{deleteError}</span>}
                 </div>
@@ -94,12 +94,12 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
       <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 16, alignItems: "start" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <SectionCard>
-            <SectionTitle>About this app</SectionTitle>
+            <SectionTitle>{locale === "id" ? "Tentang aplikasi ini" : "About this app"}</SectionTitle>
             <p style={{ fontSize: 13, color: t.textSub, lineHeight: 1.65, margin: 0 }}>{app.about}</p>
           </SectionCard>
 
           <SectionCard>
-            <SectionTitle>Key features</SectionTitle>
+            <SectionTitle>{locale === "id" ? "Fitur utama" : "Key features"}</SectionTitle>
             {features.length > 0 ? (
               <ul style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: 0, margin: 0, listStyle: "none" }}>
                 {features.map((feature, index) => (
@@ -110,12 +110,12 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
                 ))}
               </ul>
             ) : (
-              <p style={{ margin: 0, fontSize: 12, color: t.textHint }}>No key features have been added for this app yet.</p>
+              <p style={{ margin: 0, fontSize: 12, color: t.textHint }}>{locale === "id" ? "Belum ada fitur utama untuk aplikasi ini." : "No key features have been added for this app yet."}</p>
             )}
           </SectionCard>
 
           <SectionCard>
-            <SectionTitle>Screenshots</SectionTitle>
+            <SectionTitle>{locale === "id" ? "Tangkapan layar" : "Screenshots"}</SectionTitle>
             {screenshots.length > 0 ? (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
                 {screenshots.map((src, index) => (
@@ -129,7 +129,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
               </div>
             ) : (
               <div style={{ background: t.tag, border: `1px solid ${t.border}`, borderRadius: 12, padding: 20, fontSize: 12, color: t.textHint }}>
-                No screenshots have been uploaded for this app yet.
+                {locale === "id" ? "Belum ada tangkapan layar yang diunggah untuk aplikasi ini." : "No screenshots have been uploaded for this app yet."}
               </div>
             )}
           </SectionCard>
@@ -137,16 +137,16 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <SectionCard>
-            <SectionTitle>App info</SectionTitle>
+            <SectionTitle>{locale === "id" ? "Info aplikasi" : "App info"}</SectionTitle>
             {[
-              ["Version", app.version],
-              ["Division", app.division],
-              ["Category", app.category],
-              ["Platform", app.platform],
-              ["Access", app.access],
-              ["Size", app.size],
-              ["Updated", app.updated],
-              ["Active Users", app.users],
+              [locale === "id" ? "Versi" : "Version", app.version],
+              [locale === "id" ? "Divisi" : "Division", app.division],
+              [locale === "id" ? "Kategori" : "Category", app.category],
+              [locale === "id" ? "Platform" : "Platform", app.platform],
+              [locale === "id" ? "Akses" : "Access", app.access],
+              [locale === "id" ? "Ukuran" : "Size", app.size],
+              [locale === "id" ? "Diperbarui" : "Updated", app.updated],
+              [locale === "id" ? "Pengguna Aktif" : "Active Users", app.users],
             ].map(([label, value]) => (
               <InfoRow key={label} label={label} value={value} />
             ))}
@@ -162,9 +162,9 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
           </SectionCard>
 
           <SectionCard>
-            <SectionTitle>Support</SectionTitle>
-            <InfoRow label="Contact" value="apps@adr-group.co.id" valueStyle={{ color: t.red }} />
-            <InfoRow label="Hours" value="Mon-Fri, 08-17 WIB" />
+            <SectionTitle>{locale === "id" ? "Dukungan" : "Support"}</SectionTitle>
+            <InfoRow label={locale === "id" ? "Kontak" : "Contact"} value="apps@adr-group.co.id" valueStyle={{ color: t.red }} />
+            <InfoRow label={locale === "id" ? "Jam" : "Hours"} value="Mon-Fri, 08-17 WIB" />
           </SectionCard>
         </div>
       </div>

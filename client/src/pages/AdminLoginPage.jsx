@@ -4,7 +4,7 @@ import { useT } from "../context/ThemeContext";
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function AdminLoginPage({ onBack, onLoginSuccess }) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -27,7 +27,7 @@ export default function AdminLoginPage({ onBack, onLoginSuccess }) {
     setError("");
 
     if (!username.trim() || !password.trim()) {
-      setError("Please enter both username and password.");
+      setError(locale === "id" ? "Silakan isi username dan password." : "Please enter both username and password.");
       return;
     }
 
@@ -44,13 +44,13 @@ export default function AdminLoginPage({ onBack, onLoginSuccess }) {
 
       const data = await response.json();
       if (!response.ok || !data.ok) {
-        setError(data.message || "Login failed.");
+        setError(data.message || (locale === "id" ? "Login gagal." : "Login failed."));
         return;
       }
 
       onLoginSuccess(data);
     } catch {
-      setError("Unable to reach server. Please make sure backend is running.");
+      setError(locale === "id" ? "Tidak dapat menghubungi server. Pastikan backend berjalan." : "Unable to reach server. Please make sure backend is running.");
     } finally {
       setLoading(false);
     }
@@ -70,7 +70,7 @@ export default function AdminLoginPage({ onBack, onLoginSuccess }) {
           padding: 0,
         }}
       >
-        ← Back to directory
+        ← {locale === "id" ? "Kembali ke direktori" : "Back to directory"}
       </button>
 
       <div
@@ -81,21 +81,21 @@ export default function AdminLoginPage({ onBack, onLoginSuccess }) {
           padding: 20,
         }}
       >
-        <h1 style={{ margin: "0 0 6px 0", fontSize: 22, color: t.text }}>Admin Login</h1>
+        <h1 style={{ margin: "0 0 6px 0", fontSize: 22, color: t.text }}>{locale === "id" ? "Login Admin" : "Admin Login"}</h1>
         <p style={{ margin: "0 0 18px 0", fontSize: 13, color: t.textHint }}>
-          Sign in with admin credentials to manage applications.
+          {locale === "id" ? "Masuk dengan kredensial admin untuk mengelola aplikasi." : "Sign in with admin credentials to manage applications."}
         </p>
 
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
           <div>
             <label style={{ display: "block", marginBottom: 6, fontSize: 12, fontWeight: 600, color: t.textSub }}>
-              Username
+              {locale === "id" ? "Nama pengguna" : "Username"}
             </label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Admin"
+              placeholder={locale === "id" ? "Admin" : "Admin"}
               style={inputStyle}
               autoComplete="username"
             />
@@ -103,13 +103,13 @@ export default function AdminLoginPage({ onBack, onLoginSuccess }) {
 
           <div>
             <label style={{ display: "block", marginBottom: 6, fontSize: 12, fontWeight: 600, color: t.textSub }}>
-              Password
+              {locale === "id" ? "Kata sandi" : "Password"}
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
+              placeholder={locale === "id" ? "Masukkan kata sandi" : "Enter password"}
               style={inputStyle}
               autoComplete="current-password"
             />
@@ -146,7 +146,7 @@ export default function AdminLoginPage({ onBack, onLoginSuccess }) {
               opacity: loading ? 0.8 : 1,
             }}
           >
-            {loading ? "Signing in..." : "Sign in as admin"}
+            {loading ? (locale === "id" ? "Sedang masuk..." : "Signing in...") : (locale === "id" ? "Masuk sebagai admin" : "Sign in as admin")}
           </button>
         </form>
       </div>

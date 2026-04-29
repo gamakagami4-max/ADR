@@ -29,7 +29,7 @@ function IconButton({ label, onClick, children, style }) {
 }
 
 export default function AppCard({ app, onViewDetail, isAdmin, onEditApp, onDeleteApp }) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const [hovered, setHovered] = useState(false);
   const hasImageIcon = typeof app.icon === "string" && (app.icon.startsWith("data:image/") || app.icon.startsWith("http"));
 
@@ -57,7 +57,7 @@ export default function AppCard({ app, onViewDetail, isAdmin, onEditApp, onDelet
             </div>
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: t.text, lineHeight: 1.3 }}>{app.name}</div>
-              <div style={{ fontSize: 11, color: t.textHint, marginTop: 2 }}>{app.division} Division</div>
+              <div style={{ fontSize: 11, color: t.textHint, marginTop: 2 }}>{locale === "id" ? `Divisi ${app.division}` : `${app.division} Division`}</div>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -96,7 +96,7 @@ export default function AppCard({ app, onViewDetail, isAdmin, onEditApp, onDelet
             onClick={() => onViewDetail(app)}
             style={{ fontSize: 11, fontWeight: 600, padding: "6px 12px", borderRadius: 8, background: t.red, color: "#fff", border: "none", cursor: "pointer" }}
           >
-            View Detail →
+            {locale === "id" ? "Lihat Detail →" : "View Detail →"}
           </button>
         </div>
       </div>

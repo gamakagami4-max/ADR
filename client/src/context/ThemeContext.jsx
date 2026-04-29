@@ -52,6 +52,9 @@ export const ThemeContext = createContext({
   t: LIGHT,
   dark: false,
   toggle: () => {},
+  locale: "en",
+  toggleLocale: () => {},
+  tr: (key) => key,
 });
 
 export const useT = () => useContext(ThemeContext);

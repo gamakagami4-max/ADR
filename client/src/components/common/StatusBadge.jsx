@@ -1,7 +1,7 @@
 ﻿import { useT } from "../../context/ThemeContext";
 
 export default function StatusBadge({ status }) {
-  const { t } = useT();
+  const { t, locale } = useT();
 
   if (status === "stable") {
     return (
@@ -17,7 +17,7 @@ export default function StatusBadge({ status }) {
           whiteSpace: "nowrap",
         }}
       >
-        Stable
+        {locale === "id" ? "Stabil" : "Stable"}
       </span>
     );
   }

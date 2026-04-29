@@ -516,7 +516,7 @@ export default function DirectoryPage({
   onEditApp,
   onCloseEditApp,
 }) {
-  const { t } = useT();
+  const { t, tr, locale } = useT();
   const [showAddModal, setShowAddModal] = useState(false);
   const [search, setSearch] = useState("");
   const [divisionFilter, setDivisionFilter] = useState("All");
@@ -600,14 +600,14 @@ export default function DirectoryPage({
   return (
     <main style={{ maxWidth: 1152, margin: "0 auto", padding: "32px 24px" }}>
       <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: t.text, margin: "0 0 4px 0" }}>Application Directory</h1>
-        <p style={{ fontSize: 13, color: t.textHint, margin: 0 }}>Find and access internal tools across all ADR divisions.</p>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: t.text, margin: "0 0 4px 0" }}>{tr("dirTitle")}</h1>
+        <p style={{ fontSize: 13, color: t.textHint, margin: 0 }}>{tr("dirSubtitle")}</p>
       </div>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <div style={{ position: "relative", flex: 1, minWidth: 180 }}>
           <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: t.textHint, fontSize: 14, pointerEvents: "none" }}>⌕</span>
-          <input type="text" placeholder="Search by name, division, or tag…" value={search} onChange={(e) => setSearch(e.target.value)} style={inputStyle} />
+          <input type="text" placeholder={locale === "id" ? "Cari nama, divisi, atau tag…" : "Search by name, division, or tag…"} value={search} onChange={(e) => setSearch(e.target.value)} style={inputStyle} />
           {search && (
             <button onClick={() => setSearch("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: t.textHint, fontSize: 12 }}>
               ✕
@@ -615,29 +615,31 @@ export default function DirectoryPage({
           )}
         </div>
         <select value={divisionFilter} onChange={(e) => setDivisionFilter(e.target.value)} style={selectStyle}>
-          {allDivisions.map((d) => <option key={d} value={d}>{d === "All" ? "All Divisions" : d}</option>)}
+          {allDivisions.map((d) => <option key={d} value={d}>{d === "All" ? (locale === "id" ? "Semua Divisi" : "All Divisions") : d}</option>)}
         </select>
         <select value={platformFilter} onChange={(e) => setPlatformFilter(e.target.value)} style={selectStyle}>
-          {allPlatforms.map((p) => <option key={p} value={p}>{p === "All" ? "All Platforms" : p}</option>)}
+          {allPlatforms.map((p) => <option key={p} value={p}>{p === "All" ? (locale === "id" ? "Semua Platform" : "All Platforms") : p}</option>)}
         </select>
         {isAdmin && (
           <button
             onClick={handleOpenAddModal}
             style={{ fontSize: 12, fontWeight: 600, padding: "8px 12px", borderRadius: 8, background: t.red, color: "#fff", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}
           >
-            + Add App
+            {locale === "id" ? "+ Tambah Aplikasi" : "+ Add App"}
           </button>
         )}
       </div>
 
       <p style={{ fontSize: 11, color: t.textHint, marginBottom: 20 }}>
-        {filtered.length === apps.length ? `Showing all ${apps.length} apps` : `${filtered.length} of ${apps.length} apps`}
+        {filtered.length === apps.length
+          ? (locale === "id" ? `Menampilkan semua ${apps.length} aplikasi` : `Showing all ${apps.length} apps`)
+          : (locale === "id" ? `${filtered.length} dari ${apps.length} aplikasi` : `${filtered.length} of ${apps.length} apps`)}
         {search && <span> for <strong style={{ color: t.text }}>&ldquo;{search}&rdquo;</strong></span>}
       </p>
 
       {loading ? (
         <div style={{ textAlign: "center", padding: "70px 0", color: t.textHint, fontSize: 13 }}>
-          Loading applications...
+          {locale === "id" ? "Memuat aplikasi..." : "Loading applications..."}
         </div>
       ) : error ? (
         <div style={{ textAlign: "center", padding: "70px 0", color: t.red, fontSize: 13 }}>
@@ -659,12 +661,12 @@ export default function DirectoryPage({
       ) : (
         <div style={{ textAlign: "center", padding: "80px 0" }}>
           <div style={{ fontSize: 36, opacity: 0.2, marginBottom: 12 }}>⊘</div>
-          <div style={{ fontSize: 13, color: t.textSub }}>No apps match your search.</div>
+          <div style={{ fontSize: 13, color: t.textSub }}>{locale === "id" ? "Tidak ada aplikasi yang cocok dengan pencarian Anda." : "No apps match your search."}</div>
           <button
             onClick={() => { setSearch(""); setDivisionFilter("All"); setPlatformFilter("All"); }}
             style={{ marginTop: 10, fontSize: 12, color: t.red, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
           >
-            Clear filters
+            {locale === "id" ? "Hapus filter" : "Clear filters"}
           </button>
         </div>
       )}

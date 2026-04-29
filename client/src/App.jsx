@@ -8,6 +8,33 @@ import DirectoryPage from "./pages/DirectoryPage";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:5000" : "");
 const ADMIN_TOKEN_KEY = "adr_admin_token";
+const LOCALE_KEY = "adr_locale";
+const COPY = {
+  en: {
+    navbarAdminLogin: "Admin Login",
+    navbarLogout: "Logout",
+    navbarAdmin: "Admin",
+    navbarLightMode: "Light mode",
+    navbarDarkMode: "Dark mode",
+    navbarSwitchToIndonesian: "Switch to Indonesian",
+    navbarSwitchToEnglish: "Switch to English",
+    dirTitle: "Application Directory",
+    dirSubtitle: "Find and access internal tools across all ADR divisions.",
+    detailBack: "Back to App Directory",
+  },
+  id: {
+    navbarAdminLogin: "Login Admin",
+    navbarLogout: "Keluar",
+    navbarAdmin: "Admin",
+    navbarLightMode: "Mode terang",
+    navbarDarkMode: "Mode gelap",
+    navbarSwitchToIndonesian: "Ganti ke Bahasa Indonesia",
+    navbarSwitchToEnglish: "Ganti ke Bahasa Inggris",
+    dirTitle: "Direktori Aplikasi",
+    dirSubtitle: "Temukan dan akses alat internal di seluruh divisi ADR.",
+    detailBack: "Kembali ke Direktori Aplikasi",
+  },
+};
 
 function summarizeAppPayload(app) {
   return {
@@ -54,7 +81,7 @@ async function readApiResponse(response, fallbackMessage, contextLabel) {
       data = JSON.parse(responseText);
     } catch (error) {
       console.error(`[App] ${contextLabel} failed to parse JSON`, error);
-      throw new Error(`Invalid JSON from server (status ${response.status}): ${responseText.slice(0, 120)}`);
+      throw new Error(`Invalid JSON from server (status ${response.status}): ${responseText.slice(0, 120)}`, { cause: error });
     }
   }
 
@@ -69,6 +96,7 @@ async function readApiResponse(response, fallbackMessage, contextLabel) {
 
 export default function App() {
   const [dark, setDark] = useState(false);
+  const [locale, setLocale] = useState(() => localStorage.getItem(LOCALE_KEY) || "en");
   const [admin, setAdmin] = useState(null);
   const [page, setPage] = useState("directory");
   const [selectedApp, setSelectedApp] = useState(null);
@@ -77,7 +105,15 @@ export default function App() {
   const [appsLoading, setAppsLoading] = useState(true);
   const [appsError, setAppsError] = useState("");
 
-  const theme = { t: dark ? DARK : LIGHT, dark, toggle: () => setDark((d) => !d) };
+  const toggleLocale = () => {
+    setLocale((current) => {
+      const next = current === "en" ? "id" : "en";
+      localStorage.setItem(LOCALE_KEY, next);
+      return next;
+    });
+  };
+  const tr = (key) => COPY[locale]?.[key] || COPY.en[key] || key;
+  const theme = { t: dark ? DARK : LIGHT, dark, toggle: () => setDark((d) => !d), locale, toggleLocale, tr };
 
   const goToDetail = (app) => {
     setSelectedApp(app);

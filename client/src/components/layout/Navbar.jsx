@@ -25,7 +25,7 @@ function MoonIcon() {
 }
 
 export default function Navbar({ onLogoClick, isAdmin, onOpenAdminLogin, onLogout }) {
-  const { t, dark, toggle } = useT();
+  const { t, dark, toggle, locale, toggleLocale, tr } = useT();
 
   return (
     <header style={{ background: t.navBg, borderBottom: `1px solid ${t.border}`, position: "sticky", top: 0, zIndex: 30, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
@@ -37,6 +37,14 @@ export default function Navbar({ onLogoClick, isAdmin, onOpenAdminLogin, onLogou
           ADR
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button
+            onClick={toggleLocale}
+            title={locale === "en" ? tr("navbarSwitchToIndonesian") : tr("navbarSwitchToEnglish")}
+            style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, padding: "6px 10px", borderRadius: 8, border: `1px solid ${t.border}`, color: t.textSub, background: t.surface, cursor: "pointer" }}
+          >
+            <span aria-hidden>{locale === "en" ? "🇺🇸" : "🇮🇩"}</span>
+            {locale === "en" ? "EN" : "ID"}
+          </button>
           {isAdmin ? (
             <>
               <span
@@ -50,7 +58,7 @@ export default function Navbar({ onLogoClick, isAdmin, onOpenAdminLogin, onLogou
                   background: t.redLight,
                 }}
               >
-                Admin
+                {tr("navbarAdmin")}
               </span>
               <button
                 onClick={onLogout}
@@ -65,7 +73,7 @@ export default function Navbar({ onLogoClick, isAdmin, onOpenAdminLogin, onLogou
                   cursor: "pointer",
                 }}
               >
-                Logout
+                {tr("navbarLogout")}
               </button>
             </>
           ) : (
@@ -82,7 +90,7 @@ export default function Navbar({ onLogoClick, isAdmin, onOpenAdminLogin, onLogou
                 cursor: "pointer",
               }}
             >
-              Admin Login
+              {tr("navbarAdminLogin")}
             </button>
           )}
           <button
@@ -90,7 +98,7 @@ export default function Navbar({ onLogoClick, isAdmin, onOpenAdminLogin, onLogou
             style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 500, padding: "6px 12px", borderRadius: 8, border: `1px solid ${t.border}`, color: t.textSub, background: t.surface, cursor: "pointer" }}
           >
             {dark ? <SunIcon /> : <MoonIcon />}
-            {dark ? "Light mode" : "Dark mode"}
+            {dark ? tr("navbarLightMode") : tr("navbarDarkMode")}
           </button>
         </div>
       </div>
