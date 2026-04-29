@@ -9,6 +9,7 @@ import DirectoryPage from "./pages/DirectoryPage";
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:5000" : "");
 const ADMIN_TOKEN_KEY = "adr_admin_token";
 const LOCALE_KEY = "adr_locale";
+const APPS_CACHE_KEY = "adr_apps_cache_v1";
 const COPY = {
   en: {
     navbarAdminLogin: "Admin Login",
@@ -48,6 +49,10 @@ function summarizeAppPayload(app) {
     iconLength: typeof app?.icon === "string" ? app.icon.length : 0,
     screenshotLengths: Array.isArray(app?.screenshots) ? app.screenshots.map((item) => (typeof item === "string" ? item.length : 0)) : [],
   };
+}
+
+function normalizeApps(items) {
+  return (items || []).map((a) => ({ ...a, id: a.id || String(a._id) }));
 }
 
 async function readApiResponse(response, fallbackMessage, contextLabel) {
@@ -262,18 +267,39 @@ export default function App() {
 
   useEffect(() => {
     const loadApps = async () => {
-      setAppsLoading(true);
       setAppsError("");
+      let hasCachedApps = false;
+
+      // Show cached data immediately so first paint feels instant.
+      try {
+        const cachedRaw = localStorage.getItem(APPS_CACHE_KEY);
+        if (cachedRaw) {
+          const cached = JSON.parse(cachedRaw);
+          const normalizedCached = normalizeApps(cached);
+          if (normalizedCached.length > 0) {
+            setApps(normalizedCached);
+            setAppsLoading(false);
+            hasCachedApps = true;
+          }
+        }
+      } catch {
+        // Ignore invalid cache and continue with network fetch.
+      }
+
+      if (!hasCachedApps) {
+        setAppsLoading(true);
+      }
+
       try {
         const response = await fetch(`${API_BASE_URL}/api/apps`);
-        const data = await response.json();
-        if (!response.ok || !data.ok) {
-          throw new Error(data.message || "Failed to load apps.");
-        }
-        const normalized = (data.apps || []).map((a) => ({ ...a, id: a.id || String(a._id) }));
+        const data = await readApiResponse(response, "Failed to load apps.", "load apps");
+        const normalized = normalizeApps(data.apps);
         setApps(normalized);
+        localStorage.setItem(APPS_CACHE_KEY, JSON.stringify(normalized));
       } catch (error) {
-        setAppsError(error.message || "Failed to load apps.");
+        if (!hasCachedApps) {
+          setAppsError(error.message || "Failed to load apps.");
+        }
       } finally {
         setAppsLoading(false);
       }
@@ -308,6 +334,14 @@ export default function App() {
 
     verifySession();
   }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(APPS_CACHE_KEY, JSON.stringify(apps));
+    } catch {
+      // Ignore storage quota/private mode issues.
+    }
+  }, [apps]);
 
   const goToAdminLogin = () => {
     setPage("admin-login");
