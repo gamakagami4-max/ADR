@@ -26,7 +26,28 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
   };
 
   return (
-    <main style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px" }}>
+    <>
+      <style>{`
+        @media (max-width: 768px) {
+          .detail-main {
+            padding: 20px 16px !important;
+          }
+          .detail-hero {
+            padding: 18px !important;
+          }
+          .detail-layout {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+          .detail-features {
+            grid-template-columns: 1fr !important;
+          }
+          .detail-screenshots {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+      <main className="detail-main" style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px" }}>
       <button
         onClick={onBack}
         style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: t.textHint, background: "none", border: "none", cursor: "pointer", marginBottom: 24, padding: 0 }}
@@ -36,7 +57,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
 
       <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 14, overflow: "hidden", marginBottom: 20 }}>
         <div style={{ height: 3, background: t.red }} />
-        <div style={{ padding: 28 }}>
+        <div className="detail-hero" style={{ padding: 28 }}>
           <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
             <div style={{ width: 68, height: 68, borderRadius: 16, background: t.redLight, border: `1px solid ${t.redBorder}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, flexShrink: 0 }}>
               {hasImageIcon ? <img src={app.icon} alt={`${app.name} icon`} style={{ width: "100%", height: "100%", borderRadius: 16, objectFit: "cover" }} /> : app.icon}
@@ -88,7 +109,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 16, alignItems: "start" }}>
+      <div className="detail-layout" style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 16, alignItems: "start" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <SectionCard>
             <SectionTitle>{locale === "id" ? "Tentang aplikasi ini" : "About this app"}</SectionTitle>
@@ -98,7 +119,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
           <SectionCard>
             <SectionTitle>{locale === "id" ? "Fitur utama" : "Key features"}</SectionTitle>
             {features.length > 0 ? (
-              <ul style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: 0, margin: 0, listStyle: "none" }}>
+              <ul className="detail-features" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: 0, margin: 0, listStyle: "none" }}>
                 {features.map((feature, index) => (
                   <li key={index} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: t.textSub, lineHeight: 1.45 }}>
                     <span style={{ width: 6, height: 6, borderRadius: "50%", background: t.red, flexShrink: 0 }} />
@@ -114,7 +135,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
           <SectionCard>
             <SectionTitle>{locale === "id" ? "Tangkapan layar" : "Screenshots"}</SectionTitle>
             {screenshots.length > 0 ? (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
+              <div className="detail-screenshots" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
                 {screenshots.map((src, index) => (
                   <img
                     key={`${index}-${src.slice(0, 24)}`}
@@ -157,6 +178,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
 
         </div>
       </div>
-    </main>
+      </main>
+    </>
   );
 }
