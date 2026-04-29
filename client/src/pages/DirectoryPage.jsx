@@ -129,13 +129,22 @@ function AddAppModal({ t, onClose, onSubmit, initialApp }) {
     if (!files.length) return;
 
     try {
-      const screenshots = await Promise.all(
+      const settled = await Promise.allSettled(
         files.map((file) => optimizeImage(file, { maxWidth: 1440, maxHeight: 1440, quality: 0.82 }))
       );
+      const nextScreenshots = settled
+        .filter((result) => result.status === "fulfilled")
+        .map((result) => result.value);
 
-      setApp((prev) => ({ ...prev, screenshots }));
+      if (nextScreenshots.length > 0) {
+        // Append to existing screenshots so users can add files in multiple picks.
+        setApp((prev) => ({ ...prev, screenshots: [...prev.screenshots, ...nextScreenshots] }));
+      }
+      if (nextScreenshots.length !== settled.length) {
+        setError("Some screenshots could not be processed.");
+      }
     } catch {
-      setError("Failed to read one or more screenshots.");
+      setError("Failed to read screenshots.");
     } finally {
       e.target.value = "";
     }
