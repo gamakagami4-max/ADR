@@ -512,6 +512,8 @@ export default function DirectoryPage({
   const [search, setSearch] = useState("");
   const [divisionFilter, setDivisionFilter] = useState("All");
   const [platformFilter, setPlatformFilter] = useState("All");
+  const [pendingDeleteApp, setPendingDeleteApp] = useState(null);
+  const [deletingAppId, setDeletingAppId] = useState("");
 
   const allDivisions = useMemo(() => ["All", ...Array.from(new Set(apps.map((a) => a.division)))], [apps]);
   const allPlatforms = useMemo(() => ["All", ...Array.from(new Set(apps.map((a) => a.platform)))], [apps]);
@@ -557,13 +559,21 @@ export default function DirectoryPage({
     setShowAddModal(true);
   };
 
-  // FIX: AppCard calls onDeleteApp(app) with the full object.
-  // We unwrap to app.id here before forwarding to the parent handler
-  // which expects only the id string — keeping the confirm dialog local.
+  // Open in-app confirmation popup before deleting.
   const handleDeleteAppFromCard = async (app) => {
-    const confirmed = window.confirm(`Delete "${app.name}"? This cannot be undone.`);
-    if (!confirmed) return;
-    await onDeleteApp(app.id);
+    setPendingDeleteApp(app);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!pendingDeleteApp?.id) return;
+    const appId = pendingDeleteApp.id;
+    setDeletingAppId(appId);
+    setPendingDeleteApp(null);
+    try {
+      await onDeleteApp(appId);
+    } finally {
+      setDeletingAppId("");
+    }
   };
 
   // FIX: capture editingApp in a local variable at the time the submit
@@ -670,6 +680,80 @@ export default function DirectoryPage({
           onSubmit={handleSubmitApp}
           initialApp={editingApp || null}
         />
+      )}
+
+      {isAdmin && pendingDeleteApp && (
+        <div
+          onClick={() => (deletingAppId ? null : setPendingDeleteApp(null))}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+            zIndex: 80,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: 420,
+              background: t.surface,
+              border: `1px solid ${t.border}`,
+              borderRadius: 12,
+              padding: 18,
+            }}
+          >
+            <h3 style={{ margin: "0 0 8px", fontSize: 16, color: t.text }}>
+              {locale === "id" ? "Hapus aplikasi?" : "Delete app?"}
+            </h3>
+            <p style={{ margin: "0 0 16px", fontSize: 13, color: t.textSub, lineHeight: 1.5 }}>
+              {locale === "id"
+                ? `Aplikasi "${pendingDeleteApp.name}" akan dihapus permanen dan tidak bisa dipulihkan.`
+                : `The app "${pendingDeleteApp.name}" will be permanently deleted and cannot be restored.`}
+            </p>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button
+                onClick={() => setPendingDeleteApp(null)}
+                disabled={Boolean(deletingAppId)}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: "8px 14px",
+                  borderRadius: 8,
+                  border: `1px solid ${t.border}`,
+                  background: t.surface,
+                  color: t.textSub,
+                  cursor: deletingAppId ? "not-allowed" : "pointer",
+                }}
+              >
+                {locale === "id" ? "Batal" : "Cancel"}
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={Boolean(deletingAppId)}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  padding: "8px 14px",
+                  borderRadius: 8,
+                  border: "none",
+                  background: t.red,
+                  color: "#fff",
+                  cursor: deletingAppId ? "not-allowed" : "pointer",
+                  opacity: deletingAppId ? 0.85 : 1,
+                }}
+              >
+                {deletingAppId
+                  ? (locale === "id" ? "Menghapus..." : "Deleting...")
+                  : (locale === "id" ? "Ya, Hapus" : "Yes, Delete")}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   );

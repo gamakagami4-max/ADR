@@ -7,14 +7,12 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
   const { t, tr, locale } = useT();
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const hasImageIcon = typeof app.icon === "string" && (app.icon.startsWith("data:image/") || app.icon.startsWith("http"));
   const features = Array.isArray(app.features) ? app.features : [];
   const screenshots = Array.isArray(app.screenshots) ? app.screenshots : [];
 
   const handleDelete = async () => {
-    const confirmed = window.confirm(`Delete "${app.name}"? This cannot be undone.`);
-    if (!confirmed) return;
-
     setDeleteError("");
     setDeleting(true);
     try {
@@ -85,7 +83,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
                     {locale === "id" ? "Edit Aplikasi" : "Edit App"}
                   </button>
                   <button
-                    onClick={handleDelete}
+                    onClick={() => setShowDeleteConfirm(true)}
                     disabled={deleting}
                     style={{
                       fontSize: 12,
@@ -179,6 +177,80 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
         </div>
       </div>
       </main>
+
+      {showDeleteConfirm && (
+        <div
+          onClick={() => (deleting ? null : setShowDeleteConfirm(false))}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+            zIndex: 80,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: 420,
+              background: t.surface,
+              border: `1px solid ${t.border}`,
+              borderRadius: 12,
+              padding: 18,
+            }}
+          >
+            <h3 style={{ margin: "0 0 8px", fontSize: 16, color: t.text }}>
+              {locale === "id" ? "Hapus aplikasi?" : "Delete app?"}
+            </h3>
+            <p style={{ margin: "0 0 16px", fontSize: 13, color: t.textSub, lineHeight: 1.5 }}>
+              {locale === "id"
+                ? `Aplikasi "${app.name}" akan dihapus permanen dan tidak bisa dipulihkan.`
+                : `The app "${app.name}" will be permanently deleted and cannot be restored.`}
+            </p>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: "8px 14px",
+                  borderRadius: 8,
+                  border: `1px solid ${t.border}`,
+                  background: t.surface,
+                  color: t.textSub,
+                  cursor: deleting ? "not-allowed" : "pointer",
+                }}
+              >
+                {locale === "id" ? "Batal" : "Cancel"}
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  padding: "8px 14px",
+                  borderRadius: 8,
+                  border: "none",
+                  background: t.red,
+                  color: "#fff",
+                  cursor: deleting ? "not-allowed" : "pointer",
+                  opacity: deleting ? 0.85 : 1,
+                }}
+              >
+                {deleting
+                  ? (locale === "id" ? "Menghapus..." : "Deleting...")
+                  : (locale === "id" ? "Ya, Hapus" : "Yes, Delete")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

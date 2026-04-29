@@ -149,24 +149,33 @@ export default function App() {
 
     console.log("[App] Creating app", summarizeAppPayload(newApp));
 
-    return fetch(`${API_BASE_URL}/api/apps`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(newApp),
-    })
-      .then(async (response) => {
+    const optimisticId = newApp.id || `tmp-${Date.now()}`;
+    const optimisticApp = { ...newApp, id: optimisticId };
+    setApps((prev) => [optimisticApp, ...prev]);
+
+    // Fire API request in the background so the UI updates instantly.
+    (async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/apps`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(newApp),
+        });
         console.log("[App] Create response", response.status, response.headers.get("content-type"));
         const data = await readApiResponse(response, "Failed to save app. The upload may be too large.", "create");
         console.log("[App] Create succeeded", { id: data.app?.id, name: data.app?.name });
-        setApps((prev) => [data.app, ...prev]);
-      })
-      .catch((error) => {
+        setApps((prev) => prev.map((item) => (item.id === optimisticId ? data.app : item)));
+      } catch (error) {
         console.error("[App] Create failed", error);
-        throw error;
-      });
+        setApps((prev) => prev.filter((item) => item.id !== optimisticId));
+        window.alert(error?.message || "Failed to save app.");
+      }
+    })();
+
+    return Promise.resolve();
   };
 
   const handleUpdateApp = (appId, updatedApp) => {
@@ -177,44 +186,78 @@ export default function App() {
 
     console.log("[App] Updating app", appId, summarizeAppPayload(updatedApp));
 
-    return fetch(`${API_BASE_URL}/api/apps/${appId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(updatedApp),
-    }).then(async (response) => {
-      console.log("[App] Update response", response.status, response.headers.get("content-type"));
-      const data = await readApiResponse(response, "Failed to update app. The upload may be too large.", "update");
-      console.log("[App] Update succeeded", { id: data.app?.id, name: data.app?.name });
-      setApps((prev) => prev.map((item) => (item.id === appId ? data.app : item)));
-      setSelectedApp((prev) => (prev?.id === appId ? data.app : prev));
-      setEditingApp(null);
-    }).catch((error) => {
-      console.error("[App] Update failed", error);
-      throw error;
-    });
+    const previousApp = apps.find((item) => item.id === appId) || null;
+    const optimisticApp = { ...(previousApp || {}), ...updatedApp, id: appId };
+
+    // Optimistic update: apply changes immediately.
+    setApps((prev) => prev.map((item) => (item.id === appId ? optimisticApp : item)));
+    setSelectedApp((prev) => (prev?.id === appId ? optimisticApp : prev));
+    setEditingApp(null);
+
+    (async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/apps/${appId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updatedApp),
+        });
+        console.log("[App] Update response", response.status, response.headers.get("content-type"));
+        const data = await readApiResponse(response, "Failed to update app. The upload may be too large.", "update");
+        console.log("[App] Update succeeded", { id: data.app?.id, name: data.app?.name });
+        setApps((prev) => prev.map((item) => (item.id === appId ? data.app : item)));
+        setSelectedApp((prev) => (prev?.id === appId ? data.app : prev));
+      } catch (error) {
+        console.error("[App] Update failed", error);
+        if (previousApp) {
+          setApps((prev) => prev.map((item) => (item.id === appId ? previousApp : item)));
+          setSelectedApp((prev) => (prev?.id === appId ? previousApp : prev));
+        }
+        window.alert(error?.message || "Failed to update app.");
+      }
+    })();
+
+    return Promise.resolve();
   };
 
   // FIX: unified delete handler — both AppCard (via DirectoryPage wrapper)
   // and DetailPage call this with just the appId string.
-  const handleDeleteApp = (appId) => {
+  const handleDeleteApp = async (appId) => {
     const token = localStorage.getItem(ADMIN_TOKEN_KEY);
     if (!token) {
       throw new Error("Please login as admin.");
     }
 
-    return fetch(`${API_BASE_URL}/api/apps/${appId}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }).then(async (response) => {
+    const previousApps = apps;
+    const previousSelectedApp = selectedApp;
+    const shouldLeaveDetail = page === "detail" && selectedApp?.id === appId;
+
+    // Optimistic UI update: remove immediately so deletion feels instant.
+    setApps((prev) => prev.filter((item) => item.id !== appId));
+    setSelectedApp((prev) => (prev?.id === appId ? null : prev));
+    if (shouldLeaveDetail) {
+      setPage("directory");
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/apps/${appId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       await readApiResponse(response, "Failed to delete app.", "delete");
-      setApps((prev) => prev.filter((item) => item.id !== appId));
-      goToDirectory();
-    });
+    } catch (error) {
+      // Roll back optimistic updates if server-side delete fails.
+      setApps(previousApps);
+      setSelectedApp(previousSelectedApp);
+      if (shouldLeaveDetail) {
+        setPage("detail");
+      }
+      throw error;
+    }
   };
 
   useEffect(() => {
