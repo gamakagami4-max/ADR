@@ -268,26 +268,18 @@ export default function App() {
   useEffect(() => {
     const loadApps = async () => {
       setAppsError("");
-      let hasCachedApps = false;
+      setAppsLoading(true);
 
-      // Show cached data immediately so first paint feels instant.
+      let normalizedCached = null;
       try {
         const cachedRaw = localStorage.getItem(APPS_CACHE_KEY);
         if (cachedRaw) {
           const cached = JSON.parse(cachedRaw);
-          const normalizedCached = normalizeApps(cached);
-          if (normalizedCached.length > 0) {
-            setApps(normalizedCached);
-            setAppsLoading(false);
-            hasCachedApps = true;
-          }
+          const next = normalizeApps(cached);
+          if (next.length > 0) normalizedCached = next;
         }
       } catch {
         // Ignore invalid cache and continue with network fetch.
-      }
-
-      if (!hasCachedApps) {
-        setAppsLoading(true);
       }
 
       try {
@@ -297,7 +289,11 @@ export default function App() {
         setApps(normalized);
         localStorage.setItem(APPS_CACHE_KEY, JSON.stringify(normalized));
       } catch (error) {
-        if (!hasCachedApps) {
+        // Only use cache as a fallback when the network request fails.
+        if (normalizedCached) {
+          setApps(normalizedCached);
+          setAppsError("");
+        } else {
           setAppsError(error.message || "Failed to load apps.");
         }
       } finally {
