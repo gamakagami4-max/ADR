@@ -4,7 +4,6 @@ import { useT } from "../context/ThemeContext";
 import { SectionCard, SectionTitle } from "../components/layout/SectionBlocks";
 
 const PLATFORM_OPTIONS = ["Web", "Android", "iOS", "iOS & Android", "Web & Mobile"];
-const STATUS_OPTIONS = ["beta", "stable"];
 
 const EMPTY_APP = {
   name: "",
@@ -13,7 +12,6 @@ const EMPTY_APP = {
   category: "",
   tagline: "",
   about: "",
-  status: "beta",
   icon: "",
   iconName: "",
   features: [""],
@@ -39,7 +37,6 @@ function mapAppToForm(app) {
     category: app?.category || "",
     tagline: app?.tagline || "",
     about: app?.about || "",
-    status: app?.status || "beta",
     icon: app?.icon || "",
     iconName: "",
     features: Array.isArray(app?.features) && app.features.length > 0 ? app.features : [""],
@@ -171,7 +168,6 @@ function AddAppModal({ t, onClose, onSubmit, initialApp }) {
         version: initialApp?.version || "v1.0.0",
         platform,
         access: initialApp?.access || "Internal",
-        status: app.status,
         rating: initialApp?.rating || "0.0",
         ratingCount: initialApp?.ratingCount || "0",
         stars: initialApp?.stars || 0,
@@ -201,16 +197,8 @@ function AddAppModal({ t, onClose, onSubmit, initialApp }) {
   };
   const selectStyle = {
     ...inputStyle,
-    appearance: "none",
-    WebkitAppearance: "none",
-    MozAppearance: "none",
-    padding: "9px 40px 9px 11px",
+    padding: "9px 11px",
     cursor: "pointer",
-    backgroundImage: `linear-gradient(45deg, transparent 50%, ${t.textHint} 50%), linear-gradient(135deg, ${t.textHint} 50%, transparent 50%)`,
-    backgroundPosition: "calc(100% - 18px) calc(50% - 3px), calc(100% - 12px) calc(50% - 3px)",
-    backgroundSize: "6px 6px, 6px 6px",
-    backgroundRepeat: "no-repeat",
-    boxShadow: `inset 0 1px 0 ${t.surface}`,
   };
 
   return (
@@ -288,12 +276,6 @@ function AddAppModal({ t, onClose, onSubmit, initialApp }) {
                   <select style={selectStyle} value={app.platform} onChange={set("platform")}>
                     <option value="">Select platform</option>
                     {PLATFORM_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
-                  </select>
-                </Field>
-
-                <Field label="Status">
-                  <select style={selectStyle} value={app.status} onChange={set("status")}>
-                    {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                   </select>
                 </Field>
 
