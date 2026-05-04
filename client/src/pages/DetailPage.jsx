@@ -12,6 +12,13 @@ function getWebOpenHref(app) {
   return normalizeWebUrl(raw);
 }
 
+/** Long strings without spaces must still wrap inside flex/grid layouts. */
+const wrapProse = {
+  overflowWrap: "anywhere",
+  wordBreak: "break-word",
+  maxWidth: "100%",
+};
+
 export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditApp }) {
   const { t, tr, locale } = useT();
   const [deleting, setDeleting] = useState(false);
@@ -36,6 +43,10 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
   return (
     <>
       <style>{`
+        /* Grid/flex children default to min-width:auto; unbreakable text then overflows. */
+        .detail-layout > * {
+          min-width: 0;
+        }
         @media (max-width: 768px) {
           .detail-layout {
             grid-template-columns: 1fr !important;
@@ -60,15 +71,15 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
       <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 14, overflow: "hidden", marginBottom: "var(--layout-detail-hero-card-mb)" }}>
         <div style={{ height: 3, background: t.red }} />
         <div className="detail-hero" style={{ padding: "var(--layout-detail-hero-pad)" }}>
-          <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap", minWidth: 0 }}>
             <div style={{ width: 68, height: 68, borderRadius: 16, background: t.redLight, border: `1px solid ${t.redBorder}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, flexShrink: 0 }}>
               {hasImageIcon ? <img src={app.icon} alt={`${app.name} icon`} style={{ width: "100%", height: "100%", borderRadius: 16, objectFit: "cover" }} /> : app.icon}
             </div>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
-                <h1 style={{ fontSize: 20, fontWeight: 700, color: t.text, margin: 0 }}>{app.name}</h1>
+                <h1 style={{ fontSize: 20, fontWeight: 700, color: t.text, margin: 0, ...wrapProse }}>{app.name}</h1>
               </div>
-              <p style={{ fontSize: 13, color: t.textSub, lineHeight: 1.6, marginBottom: webOpenHref ? 12 : 16 }}>{app.desc}</p>
+              <p style={{ fontSize: 13, color: t.textSub, lineHeight: 1.6, marginBottom: webOpenHref ? 12 : 16, marginTop: 0, ...wrapProse }}>{app.desc}</p>
               {webOpenHref && (
                 <a
                   href={webOpenHref}
@@ -126,7 +137,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
                   >
                     {deleting ? (locale === "id" ? "Menghapus..." : "Deleting...") : (locale === "id" ? "Hapus Aplikasi" : "Delete App")}
                   </button>
-                  {deleteError && <span style={{ fontSize: 12, color: t.red }}>{deleteError}</span>}
+                  {deleteError && <span style={{ fontSize: 12, color: t.red, ...wrapProse }}>{deleteError}</span>}
                 </div>
               )}
             </div>
@@ -138,7 +149,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <SectionCard>
             <SectionTitle>{locale === "id" ? "Tentang aplikasi ini" : "About this app"}</SectionTitle>
-            <p style={{ fontSize: 13, color: t.textSub, lineHeight: 1.65, margin: 0 }}>{app.about}</p>
+            <p style={{ fontSize: 13, color: t.textSub, lineHeight: 1.65, margin: 0, ...wrapProse }}>{app.about}</p>
           </SectionCard>
 
           <SectionCard>
@@ -146,9 +157,9 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
             {features.length > 0 ? (
               <ul className="detail-features" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: 0, margin: 0, listStyle: "none" }}>
                 {features.map((feature, index) => (
-                  <li key={index} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: t.textSub, lineHeight: 1.45 }}>
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: t.red, flexShrink: 0 }} />
-                    <span>{feature}</span>
+                  <li key={index} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: t.textSub, lineHeight: 1.45, minWidth: 0 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: t.red, flexShrink: 0, marginTop: 5 }} />
+                    <span style={{ ...wrapProse }}>{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -251,7 +262,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
             <h3 style={{ margin: "0 0 8px", fontSize: 16, color: t.text }}>
               {locale === "id" ? "Hapus aplikasi?" : "Delete app?"}
             </h3>
-            <p style={{ margin: "0 0 16px", fontSize: 13, color: t.textSub, lineHeight: 1.5 }}>
+            <p style={{ margin: "0 0 16px", fontSize: 13, color: t.textSub, lineHeight: 1.5, ...wrapProse }}>
               {locale === "id"
                 ? `Aplikasi "${app.name}" akan dihapus permanen dan tidak bisa dipulihkan.`
                 : `The app "${app.name}" will be permanently deleted and cannot be restored.`}

@@ -81,7 +81,22 @@ export default function AppCard({ app, onViewDetail, isAdmin, onEditApp, onDelet
           </div>
         </div>
 
-        <p style={{ fontSize: 12, color: t.textSub, lineHeight: 1.55, flex: 1, margin: 0 }}>{app.tagline}</p>
+        <p
+          title={typeof app.tagline === "string" ? app.tagline : undefined}
+          style={{
+            fontSize: 12,
+            color: t.textSub,
+            lineHeight: 1.55,
+            margin: 0,
+            display: "-webkit-box",
+            WebkitBoxOrient: "vertical",
+            WebkitLineClamp: 3,
+            overflow: "hidden",
+            wordBreak: "break-word",
+          }}
+        >
+          {app.tagline}
+        </p>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
           {app.tags.map((tag) => (

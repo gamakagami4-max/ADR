@@ -24,9 +24,33 @@ export function InfoRow({ label, value, valueStyle }) {
   const { t } = useT();
 
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderTop: `1px solid ${t.divider}`, fontSize: 12 }}>
-      <span style={{ color: t.textHint }}>{label}</span>
-      <span style={{ fontWeight: 600, color: t.text, textAlign: "right", ...valueStyle }}>{value}</span>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        gap: 12,
+        padding: "8px 0",
+        borderTop: `1px solid ${t.divider}`,
+        fontSize: 12,
+        minWidth: 0,
+      }}
+    >
+      <span style={{ color: t.textHint, flexShrink: 0, maxWidth: "44%" }}>{label}</span>
+      <span
+        style={{
+          fontWeight: 600,
+          color: t.text,
+          textAlign: "right",
+          minWidth: 0,
+          flex: "1 1 0%",
+          overflowWrap: "anywhere",
+          wordBreak: "break-word",
+          ...valueStyle,
+        }}
+      >
+        {value}
+      </span>
     </div>
   );
 }
