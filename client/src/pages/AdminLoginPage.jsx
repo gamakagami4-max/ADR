@@ -57,7 +57,7 @@ export default function AdminLoginPage({ onBack, onLoginSuccess }) {
   };
 
   return (
-    <main style={{ maxWidth: 480, margin: "0 auto", padding: "42px 24px 24px" }}>
+    <main style={{ maxWidth: 480, margin: "0 auto", padding: "var(--layout-page-py) var(--layout-page-px) 20px" }}>
       <button
         onClick={onBack}
         style={{
@@ -78,7 +78,7 @@ export default function AdminLoginPage({ onBack, onLoginSuccess }) {
           background: t.surface,
           border: `1px solid ${t.border}`,
           borderRadius: 12,
-          padding: 20,
+          padding: "var(--layout-section-pad)",
         }}
       >
         <h1 style={{ margin: "0 0 6px 0", fontSize: 22, color: t.text }}>{locale === "id" ? "Login Admin" : "Admin Login"}</h1>

@@ -29,7 +29,7 @@ export default function Navbar({ onLogoClick, isAdmin, onOpenAdminLogin, onLogou
 
   return (
     <header style={{ background: t.navBg, borderBottom: `1px solid ${t.border}`, position: "sticky", top: 0, zIndex: 30, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 24px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 var(--layout-nav-px)", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span
           onClick={onLogoClick}
           style={{ fontSize: 17, fontWeight: 800, letterSpacing: "0.12em", color: t.red, cursor: "pointer", userSelect: "none" }}

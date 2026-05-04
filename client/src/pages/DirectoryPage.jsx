@@ -2,6 +2,13 @@
 import AppCard from "../components/apps/AppCard";
 import { useT } from "../context/ThemeContext";
 import { SectionCard, SectionTitle } from "../components/layout/SectionBlocks";
+import {
+  APP_CATEGORIES,
+  categorySelectPlaceholder,
+  formatCategoryLabel,
+  normalizeAppCategory,
+} from "../constants/appCategories";
+import { normalizeWebUrl, platformUsesWebUrl } from "../constants/platforms";
 
 const PLATFORM_OPTIONS = ["Web", "Android", "iOS", "iOS & Android", "Web & Mobile"];
 
@@ -16,6 +23,7 @@ const EMPTY_APP = {
   iconName: "",
   features: [""],
   screenshots: [],
+  webUrl: "",
 };
 
 function Field({ label, required, children }) {
@@ -34,13 +42,14 @@ function mapAppToForm(app) {
     name: app?.name || "",
     division: app?.division || "",
     platform: app?.platform || "",
-    category: app?.category || "",
+    category: normalizeAppCategory(app?.category),
     tagline: app?.tagline || "",
     about: app?.about || "",
     icon: app?.icon || "",
     iconName: "",
     features: Array.isArray(app?.features) && app.features.length > 0 ? app.features : [""],
     screenshots: Array.isArray(app?.screenshots) ? app.screenshots : [],
+    webUrl: app?.webUrl || "",
   };
 }
 
@@ -83,7 +92,7 @@ async function optimizeImage(file, { maxWidth, maxHeight, quality = 0.82 }) {
   });
 }
 
-function AddAppModal({ t, onClose, onSubmit, initialApp }) {
+function AddAppModal({ t, locale, onClose, onSubmit, initialApp }) {
   const [app, setApp] = useState(() => (initialApp ? mapAppToForm(initialApp) : EMPTY_APP));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -150,9 +159,27 @@ function AddAppModal({ t, onClose, onSubmit, initialApp }) {
   const handleSubmit = async () => {
     setError("");
     const { name, division, platform, category, tagline } = app;
-    if (!name.trim() || !division.trim() || !platform || !category.trim() || !tagline.trim()) {
+    const categoryNorm = normalizeAppCategory(category);
+    if (!name.trim() || !division.trim() || !platform || !categoryNorm || !tagline.trim()) {
       setError("Please complete all required fields.");
       return;
+    }
+
+    let webUrlOut = "";
+    if (platformUsesWebUrl(platform)) {
+      const raw = (app.webUrl || "").trim();
+      if (raw) {
+        const normalized = normalizeWebUrl(raw);
+        if (normalized === null) {
+          setError(
+            locale === "id"
+              ? "Masukkan URL yang valid (mis. https://app.contoh.com)."
+              : "Please enter a valid URL (e.g. https://app.example.com)."
+          );
+          return;
+        }
+        webUrlOut = normalized;
+      }
     }
 
     const id = `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "app"}-${Date.now()}`;
@@ -167,15 +194,16 @@ function AddAppModal({ t, onClose, onSubmit, initialApp }) {
         division: division.trim(),
         version: initialApp?.version || "v1.0.0",
         platform,
+        webUrl: webUrlOut,
         access: initialApp?.access || "Internal",
         rating: initialApp?.rating || "0.0",
         ratingCount: initialApp?.ratingCount || "0",
         stars: initialApp?.stars || 0,
-        tags: [division.trim(), category.trim()],
+        tags: [division.trim(), formatCategoryLabel(categoryNorm, "en")],
         tagline: tagline.trim(),
         desc: tagline.trim(),
         about: app.about.trim() || `${name.trim()} is a newly added internal app. Please update this description with detailed business context.`,
-        category: category.trim(),
+        category: categoryNorm,
         size: initialApp?.size || "TBD",
         updated: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
         users: initialApp?.users || "0 active",
@@ -204,7 +232,7 @@ function AddAppModal({ t, onClose, onSubmit, initialApp }) {
   return (
     <>
       <style>{`
-        @media (max-width: 599px) {
+        @media (max-width: 640px) {
           .add-modal-overlay {
             align-items: flex-end !important;
             padding: 0 !important;
@@ -214,13 +242,13 @@ function AddAppModal({ t, onClose, onSubmit, initialApp }) {
             border-radius: 16px 16px 0 0 !important;
           }
           .add-modal-body {
-            padding: 0 16px 16px !important;
+            padding: 0 var(--layout-modal-px) var(--layout-modal-body-pb) !important;
           }
           .add-modal-header {
-            padding: 16px 16px 0 !important;
+            padding: var(--layout-modal-header-pt) var(--layout-modal-px) 0 !important;
           }
           .add-modal-footer {
-            padding: 12px 16px !important;
+            padding: var(--layout-modal-footer-py) var(--layout-modal-px) !important;
           }
           .add-modal-grid {
             grid-template-columns: 1fr !important;
@@ -234,7 +262,7 @@ function AddAppModal({ t, onClose, onSubmit, initialApp }) {
         style={{
           position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          padding: 20, zIndex: 60,
+          padding: "var(--layout-modal-overlay-pad)", zIndex: 60,
         }}
       >
         <div
@@ -245,7 +273,7 @@ function AddAppModal({ t, onClose, onSubmit, initialApp }) {
           <SectionCard style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "90vh" }}>
 
             {/* Header */}
-            <div className="add-modal-header" style={{ padding: "20px 24px 0", flexShrink: 0 }}>
+            <div className="add-modal-header" style={{ padding: "var(--layout-modal-header-pt) var(--layout-modal-px) 0", flexShrink: 0 }}>
               <SectionTitle>{isEditing ? "Edit app" : "Add new app"}</SectionTitle>
               <p style={{ margin: "4px 0 18px", fontSize: 12, color: t.textHint, lineHeight: 1.6 }}>
                 {isEditing ? "Update the selected app entry." : "Create a new internal app entry."} Fields marked <span style={{ color: "#e24b4a" }}>*</span> are required.
@@ -253,7 +281,7 @@ function AddAppModal({ t, onClose, onSubmit, initialApp }) {
             </div>
 
             {/* Body */}
-            <div className="add-modal-body" style={{ padding: "0 24px 20px", overflowY: "auto", flex: 1 }}>
+            <div className="add-modal-body" style={{ padding: "0 var(--layout-modal-px) var(--layout-modal-body-pb)", overflowY: "auto", flex: 1 }}>
               <div
                 className="add-modal-grid"
                 style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
@@ -268,16 +296,50 @@ function AddAppModal({ t, onClose, onSubmit, initialApp }) {
                   <input style={inputStyle} type="text" placeholder="e.g. Distribution" value={app.division} onChange={set("division")} />
                 </Field>
 
-                <Field label="Category" required>
-                  <input style={inputStyle} type="text" placeholder="e.g. Logistics" value={app.category} onChange={set("category")} />
+                <Field label={locale === "id" ? "Kategori" : "Category"} required>
+                  <select style={selectStyle} value={app.category} onChange={set("category")}>
+                    <option value="">{categorySelectPlaceholder(locale)}</option>
+                    {APP_CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {formatCategoryLabel(c, locale)}
+                      </option>
+                    ))}
+                  </select>
                 </Field>
 
                 <Field label="Platform" required>
-                  <select style={selectStyle} value={app.platform} onChange={set("platform")}>
+                  <select
+                    style={selectStyle}
+                    value={app.platform}
+                    onChange={(e) => {
+                      const nextPlatform = e.target.value;
+                      setApp((prev) => ({
+                        ...prev,
+                        platform: nextPlatform,
+                        ...(platformUsesWebUrl(nextPlatform) ? {} : { webUrl: "" }),
+                      }));
+                    }}
+                  >
                     <option value="">Select platform</option>
                     {PLATFORM_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </Field>
+
+                {platformUsesWebUrl(app.platform) && (
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <Field label={locale === "id" ? "Tautan aplikasi (URL)" : "App link (URL)"}>
+                      <input
+                        style={inputStyle}
+                        type="url"
+                        inputMode="url"
+                        autoComplete="url"
+                        placeholder={locale === "id" ? "https://aplikasi.perusahaan.internal" : "https://app.company.internal"}
+                        value={app.webUrl}
+                        onChange={set("webUrl")}
+                      />
+                    </Field>
+                  </div>
+                )}
 
                 <div style={{ gridColumn: "1 / -1" }}>
                   <Field label="Short tagline" required>
@@ -470,7 +532,7 @@ function AddAppModal({ t, onClose, onSubmit, initialApp }) {
             {/* Footer */}
             <div
               className="add-modal-footer"
-              style={{ borderTop: `1px solid ${t.divider}`, padding: "14px 24px", display: "flex", justifyContent: "flex-end", gap: 8, flexShrink: 0 }}
+              style={{ borderTop: `1px solid ${t.divider}`, padding: "var(--layout-modal-footer-py) var(--layout-modal-px)", display: "flex", justifyContent: "flex-end", gap: 8, flexShrink: 0 }}
             >
               <button
                 onClick={onClose}
@@ -512,6 +574,7 @@ export default function DirectoryPage({
   const [search, setSearch] = useState("");
   const [divisionFilter, setDivisionFilter] = useState("All");
   const [platformFilter, setPlatformFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState("All");
   const [pendingDeleteApp, setPendingDeleteApp] = useState(null);
   const [deletingAppId, setDeletingAppId] = useState("");
 
@@ -521,15 +584,20 @@ export default function DirectoryPage({
   const filtered = useMemo(() => {
     return apps.filter((app) => {
       const q = search.toLowerCase();
+      const catNorm = normalizeAppCategory(app.category);
+      const catLabel = catNorm ? formatCategoryLabel(catNorm, locale).toLowerCase() : String(app.category || "").toLowerCase();
       const matchSearch =
         !q ||
         app.name.toLowerCase().includes(q) ||
         app.division.toLowerCase().includes(q) ||
+        catLabel.includes(q) ||
         app.tags.some((tg) => tg.toLowerCase().includes(q)) ||
         app.tagline.toLowerCase().includes(q);
-      return matchSearch && (divisionFilter === "All" || app.division === divisionFilter) && (platformFilter === "All" || app.platform === platformFilter);
+      const matchCategory =
+        categoryFilter === "All" || normalizeAppCategory(app.category) === categoryFilter;
+      return matchSearch && matchCategory && (divisionFilter === "All" || app.division === divisionFilter) && (platformFilter === "All" || app.platform === platformFilter);
     });
-  }, [search, divisionFilter, platformFilter, apps]);
+  }, [search, divisionFilter, platformFilter, categoryFilter, apps, locale]);
 
   const inputStyle = {
     background: t.input,
@@ -599,13 +667,13 @@ export default function DirectoryPage({
   };
 
   return (
-    <main style={{ maxWidth: 1152, margin: "0 auto", padding: "32px 24px" }}>
-      <div style={{ marginBottom: 28 }}>
+    <main style={{ maxWidth: 1152, margin: "0 auto", padding: "var(--layout-page-py) var(--layout-page-px)" }}>
+      <div style={{ marginBottom: "var(--layout-dir-block-mb)" }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: t.text, margin: "0 0 4px 0" }}>{tr("dirTitle")}</h1>
         <p style={{ fontSize: 13, color: t.textHint, margin: 0 }}>{tr("dirSubtitle")}</p>
       </div>
 
-      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 10, marginBottom: "var(--layout-dir-filters-mb)", flexWrap: "wrap" }}>
         <div style={{ position: "relative", flex: 1, minWidth: 180 }}>
           <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: t.textHint, fontSize: 14, pointerEvents: "none" }}>⌕</span>
           <input type="text" placeholder={locale === "id" ? "Cari nama, divisi, atau tag…" : "Search by name, division, or tag…"} value={search} onChange={(e) => setSearch(e.target.value)} style={inputStyle} />
@@ -621,6 +689,14 @@ export default function DirectoryPage({
         <select value={platformFilter} onChange={(e) => setPlatformFilter(e.target.value)} style={selectStyle}>
           {allPlatforms.map((p) => <option key={p} value={p}>{p === "All" ? (locale === "id" ? "Semua Platform" : "All Platforms") : p}</option>)}
         </select>
+        <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} style={selectStyle}>
+          <option value="All">{locale === "id" ? "Semua kategori" : "All categories"}</option>
+          {APP_CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {formatCategoryLabel(c, locale)}
+            </option>
+          ))}
+        </select>
         {isAdmin && (
           <button
             onClick={handleOpenAddModal}
@@ -631,7 +707,7 @@ export default function DirectoryPage({
         )}
       </div>
 
-      <p style={{ fontSize: 11, color: t.textHint, marginBottom: 20 }}>
+      <p style={{ fontSize: 11, color: t.textHint, marginBottom: "var(--layout-dir-count-mb)" }}>
         {filtered.length === apps.length
           ? (locale === "id" ? `Menampilkan semua ${apps.length} aplikasi` : `Showing all ${apps.length} apps`)
           : (locale === "id" ? `${filtered.length} dari ${apps.length} aplikasi` : `${filtered.length} of ${apps.length} apps`)}
@@ -639,15 +715,15 @@ export default function DirectoryPage({
       </p>
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: "70px 0", color: t.textHint, fontSize: 13 }}>
+        <div style={{ textAlign: "center", padding: "var(--layout-empty-state-py) 0", color: t.textHint, fontSize: 13 }}>
           {locale === "id" ? "Memuat aplikasi..." : "Loading applications..."}
         </div>
       ) : error ? (
-        <div style={{ textAlign: "center", padding: "70px 0", color: t.red, fontSize: 13 }}>
+        <div style={{ textAlign: "center", padding: "var(--layout-empty-state-py) 0", color: t.red, fontSize: 13 }}>
           {error}
         </div>
       ) : filtered.length > 0 ? (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "var(--layout-grid-gap)" }}>
           {filtered.map((app) => (
             <AppCard
               key={app.id}
@@ -660,11 +736,11 @@ export default function DirectoryPage({
           ))}
         </div>
       ) : (
-        <div style={{ textAlign: "center", padding: "80px 0" }}>
+        <div style={{ textAlign: "center", padding: "var(--layout-empty-state-narrow-py) 0" }}>
           <div style={{ fontSize: 36, opacity: 0.2, marginBottom: 12 }}>⊘</div>
           <div style={{ fontSize: 13, color: t.textSub }}>{locale === "id" ? "Tidak ada aplikasi yang cocok dengan pencarian Anda." : "No apps match your search."}</div>
           <button
-            onClick={() => { setSearch(""); setDivisionFilter("All"); setPlatformFilter("All"); }}
+            onClick={() => { setSearch(""); setDivisionFilter("All"); setPlatformFilter("All"); setCategoryFilter("All"); }}
             style={{ marginTop: 10, fontSize: 12, color: t.red, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
           >
             {locale === "id" ? "Hapus filter" : "Clear filters"}
@@ -676,6 +752,7 @@ export default function DirectoryPage({
         <AddAppModal
           key={editingApp?.id || "new-app"}
           t={t}
+          locale={locale}
           onClose={handleCloseModal}
           onSubmit={handleSubmitApp}
           initialApp={editingApp || null}
@@ -692,7 +769,7 @@ export default function DirectoryPage({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: 20,
+            padding: "var(--layout-modal-overlay-pad)",
             zIndex: 80,
           }}
         >
@@ -704,7 +781,7 @@ export default function DirectoryPage({
               background: t.surface,
               border: `1px solid ${t.border}`,
               borderRadius: 12,
-              padding: 18,
+              padding: "var(--layout-section-pad)",
             }}
           >
             <h3 style={{ margin: "0 0 8px", fontSize: 16, color: t.text }}>

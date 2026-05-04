@@ -1,1 +1,59 @@
 @import "tailwindcss";
+
+/* Page shell, nav, footer, cards — tighter on phones */
+:root {
+  --layout-page-px: 24px;
+  --layout-page-py: 32px;
+  --layout-nav-px: 24px;
+  --layout-footer-py: 20px;
+  --layout-footer-px: 24px;
+  --layout-footer-mt: 64px;
+  --layout-section-pad: 20px;
+  --layout-app-card-pad: 20px;
+  --layout-app-card-gap: 12px;
+  --layout-detail-hero-pad: 28px;
+  --layout-modal-overlay-pad: 20px;
+  --layout-modal-header-pt: 20px;
+  --layout-modal-px: 24px;
+  --layout-modal-body-pb: 20px;
+  --layout-modal-footer-py: 14px;
+  --layout-empty-state-py: 70px;
+  --layout-empty-state-narrow-py: 80px;
+  --layout-grid-gap: 14px;
+  --layout-dir-block-mb: 28px;
+  --layout-dir-filters-mb: 16px;
+  --layout-dir-count-mb: 20px;
+  --layout-detail-stack-gap: 16px;
+  --layout-detail-back-mb: 24px;
+  --layout-detail-hero-card-mb: 20px;
+}
+
+
+@media (max-width: 640px) {
+  :root {
+    --layout-page-px: 12px;
+    --layout-page-py: 14px;
+    --layout-nav-px: 10px;
+    --layout-footer-py: 10px;
+    --layout-footer-px: 12px;
+    --layout-footer-mt: 36px;
+    --layout-section-pad: 14px;
+    --layout-app-card-pad: 14px;
+    --layout-app-card-gap: 10px;
+    --layout-detail-hero-pad: 16px;
+    --layout-modal-overlay-pad: 10px;
+    --layout-modal-header-pt: 14px;
+    --layout-modal-px: 14px;
+    --layout-modal-body-pb: 14px;
+    --layout-modal-footer-py: 12px;
+    --layout-empty-state-py: 44px;
+    --layout-empty-state-narrow-py: 52px;
+    --layout-grid-gap: 10px;
+    --layout-dir-block-mb: 16px;
+    --layout-dir-filters-mb: 12px;
+    --layout-dir-count-mb: 12px;
+    --layout-detail-stack-gap: 10px;
+    --layout-detail-back-mb: 14px;
+    --layout-detail-hero-card-mb: 14px;
+  }
+}

@@ -4,7 +4,7 @@ export default function Footer() {
   const { t, locale } = useT();
 
   return (
-    <footer style={{ borderTop: `1px solid ${t.border}`, marginTop: 64, padding: "20px 24px", textAlign: "center", fontSize: 11, color: t.textHint, background: t.navBg }}>
+    <footer style={{ borderTop: `1px solid ${t.border}`, marginTop: "var(--layout-footer-mt)", padding: "var(--layout-footer-py) var(--layout-footer-px)", textAlign: "center", fontSize: 11, color: t.textHint, background: t.navBg }}>
       <span style={{ fontWeight: 600, color: t.textSub }}>ADR Group of Companies</span>
       {" "}
       {locale === "id"

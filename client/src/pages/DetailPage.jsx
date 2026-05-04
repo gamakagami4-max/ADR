@@ -1,7 +1,16 @@
 import { useState } from "react";
 import Tag from "../components/common/Tag";
 import { InfoRow, SectionCard, SectionTitle } from "../components/layout/SectionBlocks";
+import { formatCategoryLabel } from "../constants/appCategories";
+import { normalizeWebUrl, platformUsesWebUrl } from "../constants/platforms";
 import { useT } from "../context/ThemeContext";
+
+function getWebOpenHref(app) {
+  if (!platformUsesWebUrl(app.platform)) return null;
+  const raw = String(app.webUrl || "").trim();
+  if (!raw) return null;
+  return normalizeWebUrl(raw);
+}
 
 export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditApp }) {
   const { t, tr, locale } = useT();
@@ -11,6 +20,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
   const hasImageIcon = typeof app.icon === "string" && (app.icon.startsWith("data:image/") || app.icon.startsWith("http"));
   const features = Array.isArray(app.features) ? app.features : [];
   const screenshots = Array.isArray(app.screenshots) ? app.screenshots : [];
+  const webOpenHref = getWebOpenHref(app);
 
   const handleDelete = async () => {
     setDeleteError("");
@@ -27,15 +37,9 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
     <>
       <style>{`
         @media (max-width: 768px) {
-          .detail-main {
-            padding: 20px 16px !important;
-          }
-          .detail-hero {
-            padding: 18px !important;
-          }
           .detail-layout {
             grid-template-columns: 1fr !important;
-            gap: 12px !important;
+            gap: var(--layout-detail-stack-gap) !important;
           }
           .detail-features {
             grid-template-columns: 1fr !important;
@@ -45,17 +49,17 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
           }
         }
       `}</style>
-      <main className="detail-main" style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px" }}>
+      <main className="detail-main" style={{ maxWidth: 960, margin: "0 auto", padding: "var(--layout-page-py) var(--layout-page-px)" }}>
       <button
         onClick={onBack}
-        style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: t.textHint, background: "none", border: "none", cursor: "pointer", marginBottom: 24, padding: 0 }}
+        style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: t.textHint, background: "none", border: "none", cursor: "pointer", marginBottom: "var(--layout-detail-back-mb)", padding: 0 }}
       >
         ← {tr("detailBack")}
       </button>
 
-      <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 14, overflow: "hidden", marginBottom: 20 }}>
+      <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 14, overflow: "hidden", marginBottom: "var(--layout-detail-hero-card-mb)" }}>
         <div style={{ height: 3, background: t.red }} />
-        <div className="detail-hero" style={{ padding: 28 }}>
+        <div className="detail-hero" style={{ padding: "var(--layout-detail-hero-pad)" }}>
           <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
             <div style={{ width: 68, height: 68, borderRadius: 16, background: t.redLight, border: `1px solid ${t.redBorder}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, flexShrink: 0 }}>
               {hasImageIcon ? <img src={app.icon} alt={`${app.name} icon`} style={{ width: "100%", height: "100%", borderRadius: 16, objectFit: "cover" }} /> : app.icon}
@@ -64,7 +68,30 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
                 <h1 style={{ fontSize: 20, fontWeight: 700, color: t.text, margin: 0 }}>{app.name}</h1>
               </div>
-              <p style={{ fontSize: 13, color: t.textSub, lineHeight: 1.6, marginBottom: 16 }}>{app.desc}</p>
+              <p style={{ fontSize: 13, color: t.textSub, lineHeight: 1.6, marginBottom: webOpenHref ? 12 : 16 }}>{app.desc}</p>
+              {webOpenHref && (
+                <a
+                  href={webOpenHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: "#fff",
+                    background: t.red,
+                    padding: "10px 16px",
+                    borderRadius: 8,
+                    textDecoration: "none",
+                    marginBottom: 16,
+                  }}
+                >
+                  {locale === "id" ? "Buka aplikasi" : "Open app"}
+                  <span aria-hidden="true" style={{ fontSize: 12 }}>↗</span>
+                </a>
+              )}
               {isAdmin && (
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                   <button
@@ -107,7 +134,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
         </div>
       </div>
 
-      <div className="detail-layout" style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 16, alignItems: "start" }}>
+      <div className="detail-layout" style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: "var(--layout-detail-stack-gap)", alignItems: "start" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <SectionCard>
             <SectionTitle>{locale === "id" ? "Tentang aplikasi ini" : "About this app"}</SectionTitle>
@@ -144,7 +171,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
                 ))}
               </div>
             ) : (
-              <div style={{ background: t.tag, border: `1px solid ${t.border}`, borderRadius: 12, padding: 20, fontSize: 12, color: t.textHint }}>
+              <div style={{ background: t.tag, border: `1px solid ${t.border}`, borderRadius: 12, padding: "var(--layout-section-pad)", fontSize: 12, color: t.textHint }}>
                 {locale === "id" ? "Belum ada tangkapan layar yang diunggah untuk aplikasi ini." : "No screenshots have been uploaded for this app yet."}
               </div>
             )}
@@ -156,8 +183,27 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
             <SectionTitle>{locale === "id" ? "Info aplikasi" : "App info"}</SectionTitle>
             {[
               [locale === "id" ? "Divisi" : "Division", app.division],
-              [locale === "id" ? "Kategori" : "Category", app.category],
+              [locale === "id" ? "Kategori" : "Category", formatCategoryLabel(app.category, locale)],
               [locale === "id" ? "Platform" : "Platform", app.platform],
+              ...(platformUsesWebUrl(app.platform) && String(app.webUrl || "").trim()
+                ? [
+                    [
+                      locale === "id" ? "Tautan" : "Link",
+                      webOpenHref ? (
+                        <a
+                          href={webOpenHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: t.red, fontWeight: 600, wordBreak: "break-all", textDecoration: "underline" }}
+                        >
+                          {webOpenHref}
+                        </a>
+                      ) : (
+                        String(app.webUrl).trim()
+                      ),
+                    ],
+                  ]
+                : []),
               [locale === "id" ? "Diperbarui" : "Updated", app.updated],
             ].map(([label, value]) => (
               <InfoRow key={label} label={label} value={value} />
@@ -187,7 +233,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: 20,
+            padding: "var(--layout-modal-overlay-pad)",
             zIndex: 80,
           }}
         >
@@ -199,7 +245,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
               background: t.surface,
               border: `1px solid ${t.border}`,
               borderRadius: 12,
-              padding: 18,
+              padding: "var(--layout-section-pad)",
             }}
           >
             <h3 style={{ margin: "0 0 8px", fontSize: 16, color: t.text }}>

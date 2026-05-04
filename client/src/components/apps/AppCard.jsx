@@ -48,7 +48,7 @@ export default function AppCard({ app, onViewDetail, isAdmin, onEditApp, onDelet
       }}
     >
       <div style={{ height: 2, background: t.red, opacity: hovered ? 1 : 0, transition: "opacity 0.15s" }} />
-      <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
+      <div style={{ padding: "var(--layout-app-card-pad)", display: "flex", flexDirection: "column", gap: "var(--layout-app-card-gap)", flex: 1 }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 38, height: 38, borderRadius: 10, background: t.redLight, border: `1px solid ${t.redBorder}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, flexShrink: 0 }}>

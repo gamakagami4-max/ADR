@@ -4,7 +4,7 @@ export function SectionCard({ children, style }) {
   const { t } = useT();
 
   return (
-    <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 12, padding: 20, ...style }}>
+    <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 12, padding: "var(--layout-section-pad)", ...style }}>
       {children}
     </div>
   );

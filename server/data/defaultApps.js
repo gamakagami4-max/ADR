@@ -16,7 +16,7 @@ const defaultApps = [
     desc: "End-to-end management for automotive component production, OEM orders, and quality control across all manufacturing plants.",
     about:
       "ADR Auto Portal is the central digital hub for ADR Group's Automotive Division. Used by production supervisors, QC teams, and procurement managers across the Kapuk and Tangerang plants, it brings together purchase orders, quality inspection logs, OEM delivery schedules, and supplier communications in a single, mobile-first platform.",
-    category: "Manufacturing",
+    category: "main",
     size: "48.2 MB",
     updated: "12 Apr 2026",
     users: "1,200+ active",
@@ -44,7 +44,7 @@ const defaultApps = [
     desc: "Plantation monitoring, MDF mill operations, and harvest tracking for ADR's agribusiness division across Kalimantan and Sumatra.",
     about:
       "ADR Agro Manager empowers field officers and mill supervisors to record, track, and report on plantation activities in real time. Designed for use in low-connectivity environments, the app supports offline data capture that syncs automatically when a connection is available.",
-    category: "Agribusiness",
+    category: "sub",
     size: "32.7 MB",
     updated: "3 Mar 2026",
     users: "420+ active",
@@ -72,7 +72,7 @@ const defaultApps = [
     desc: "Real-time distribution tracking, warehouse inventory, and logistics coordination across 5 regional distribution offices throughout Indonesia.",
     about:
       "ADR Distribusi connects the group's five regional distribution companies under one logistics management platform. Warehouse staff use it to manage stock and dispatch teams use it to coordinate deliveries.",
-    category: "Logistics",
+    category: "support",
     size: "54.9 MB",
     updated: "10 Apr 2026",
     users: "2,100+ active",
