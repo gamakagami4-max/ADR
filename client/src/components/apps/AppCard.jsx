@@ -28,7 +28,7 @@ function IconButton({ label, onClick, children, style }) {
 }
 
 export default function AppCard({ app, onViewDetail, isAdmin, onEditApp, onDeleteApp }) {
-  const { t, locale } = useT();
+  const { t, locale, dark } = useT();
   const [hovered, setHovered] = useState(false);
   const hasImageIcon = typeof app.icon === "string" && (app.icon.startsWith("data:image/") || app.icon.startsWith("http"));
 
@@ -38,7 +38,7 @@ export default function AppCard({ app, onViewDetail, isAdmin, onEditApp, onDelet
       onMouseLeave={() => setHovered(false)}
       style={{
         background: t.surface,
-        border: `1px solid ${hovered ? t.red : t.border}`,
+        border: `1.5px solid ${hovered ? t.red : dark ? "#475569" : "#d1d5db"}`,
         borderRadius: 12,
         overflow: "hidden",
         display: "flex",

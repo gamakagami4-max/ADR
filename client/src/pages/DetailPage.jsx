@@ -158,7 +158,6 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
               [locale === "id" ? "Divisi" : "Division", app.division],
               [locale === "id" ? "Kategori" : "Category", app.category],
               [locale === "id" ? "Platform" : "Platform", app.platform],
-              [locale === "id" ? "Akses" : "Access", app.access],
               [locale === "id" ? "Diperbarui" : "Updated", app.updated],
             ].map(([label, value]) => (
               <InfoRow key={label} label={label} value={value} />
