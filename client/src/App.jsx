@@ -55,6 +55,21 @@ function normalizeApps(items) {
   return (items || []).map((a) => ({ ...a, id: a.id || String(a._id) }));
 }
 
+/** First paint from cache so directory cards feel instant; network refresh runs after (stale-while-revalidate). */
+function readCachedAppsState() {
+  try {
+    const cachedRaw = localStorage.getItem(APPS_CACHE_KEY);
+    if (cachedRaw) {
+      const cached = JSON.parse(cachedRaw);
+      const next = normalizeApps(cached);
+      if (next.length > 0) return { apps: next, loading: false };
+    }
+  } catch {
+    // Ignore invalid cache.
+  }
+  return { apps: [], loading: true };
+}
+
 async function readApiResponse(response, fallbackMessage, contextLabel) {
   const contentType = response.headers.get("content-type") || "";
   const responseText = await response.text();
@@ -106,8 +121,8 @@ export default function App() {
   const [page, setPage] = useState("directory");
   const [selectedApp, setSelectedApp] = useState(null);
   const [editingApp, setEditingApp] = useState(null);
-  const [apps, setApps] = useState([]);
-  const [appsLoading, setAppsLoading] = useState(true);
+  const [apps, setApps] = useState(() => readCachedAppsState().apps);
+  const [appsLoading, setAppsLoading] = useState(() => readCachedAppsState().loading);
   const [appsError, setAppsError] = useState("");
 
   const toggleLocale = () => {
@@ -268,7 +283,6 @@ export default function App() {
   useEffect(() => {
     const loadApps = async () => {
       setAppsError("");
-      setAppsLoading(true);
 
       let normalizedCached = null;
       try {
@@ -282,6 +296,14 @@ export default function App() {
         // Ignore invalid cache and continue with network fetch.
       }
 
+      // Stale-while-revalidate: keep showing cache immediately; do not block the grid on the network.
+      if (normalizedCached) {
+        setApps(normalizedCached);
+        setAppsLoading(false);
+      } else {
+        setAppsLoading(true);
+      }
+
       try {
         const response = await fetch(`${API_BASE_URL}/api/apps`);
         const data = await readApiResponse(response, "Failed to load apps.", "load apps");
@@ -289,7 +311,6 @@ export default function App() {
         setApps(normalized);
         localStorage.setItem(APPS_CACHE_KEY, JSON.stringify(normalized));
       } catch (error) {
-        // Only use cache as a fallback when the network request fails.
         if (normalizedCached) {
           setApps(normalizedCached);
           setAppsError("");
