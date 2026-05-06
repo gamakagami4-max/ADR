@@ -43,6 +43,7 @@ export default function AppCard({ app, onViewDetail, isAdmin, onEditApp, onDelet
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
+        height: "100%",
         transition: "border-color 0.15s, box-shadow 0.15s",
         boxShadow: hovered ? "0 4px 16px rgba(0,0,0,0.1)" : "none",
       }}
@@ -104,7 +105,7 @@ export default function AppCard({ app, onViewDetail, isAdmin, onEditApp, onDelet
           ))}
         </div>
 
-        <div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 10, display: "flex", justifyContent: "flex-end" }}>
+        <div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 10, display: "flex", justifyContent: "flex-end", marginTop: "auto" }}>
           <button
             onClick={() => onViewDetail(app)}
             style={{ fontSize: 11, fontWeight: 600, padding: "6px 12px", borderRadius: 8, background: t.red, color: "#fff", border: "none", cursor: "pointer" }}
