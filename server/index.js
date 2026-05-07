@@ -32,6 +32,8 @@ const appSchema = new mongoose.Schema(
     icon: { type: String, trim: true, default: "" },
     name: { type: String, required: true, trim: true },
     division: { type: String, required: true, trim: true },
+    picSystem: { type: String, trim: true, default: "" },
+    systemOwner: { type: String, trim: true, default: "" },
     version: { type: String, required: true, trim: true },
     platform: { type: String, required: true, trim: true },
     webUrl: { type: String, trim: true, default: "" },
@@ -50,6 +52,8 @@ const appSchema = new mongoose.Schema(
     users: { type: String, default: "0 active", trim: true },
     features: [{ type: String, trim: true }],
     screenshots: [{ type: String, trim: true }],
+    attachmentName: { type: String, trim: true, default: "" },
+    attachmentData: { type: String, trim: true, default: "" },
   },
   { timestamps: true, versionKey: false }
 );
@@ -112,10 +116,14 @@ function summarizeRequestApp(payload) {
     id: payload?.id,
     name: payload?.name,
     division: payload?.division,
+    picSystem: payload?.picSystem,
+    systemOwner: payload?.systemOwner,
     platform: payload?.platform,
     category: payload?.category,
     featuresCount: Array.isArray(payload?.features) ? payload.features.length : 0,
     screenshotsCount: Array.isArray(payload?.screenshots) ? payload.screenshots.length : 0,
+    attachmentName: payload?.attachmentName,
+    attachmentLength: typeof payload?.attachmentData === "string" ? payload.attachmentData.length : 0,
     iconLength: typeof payload?.icon === "string" ? payload.icon.length : 0,
     screenshotLengths: Array.isArray(payload?.screenshots)
       ? payload.screenshots.map((item) => (typeof item === "string" ? item.length : 0))

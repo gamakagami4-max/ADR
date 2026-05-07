@@ -17,10 +17,14 @@ const EMPTY_APP = {
   division: "",
   platform: "",
   category: "",
+  picSystem: "",
+  systemOwner: "",
   tagline: "",
   about: "",
   icon: "",
   iconName: "",
+  attachmentName: "",
+  attachmentData: "",
   features: [""],
   screenshots: [],
   webUrl: "",
@@ -43,10 +47,14 @@ function mapAppToForm(app) {
     division: app?.division || "",
     platform: app?.platform || "",
     category: normalizeAppCategory(app?.category),
+    picSystem: app?.picSystem || "",
+    systemOwner: app?.systemOwner || "",
     tagline: app?.tagline || "",
     about: app?.about || "",
     icon: app?.icon || "",
     iconName: "",
+    attachmentName: app?.attachmentName || "",
+    attachmentData: app?.attachmentData || "",
     features: Array.isArray(app?.features) && app.features.length > 0 ? app.features : [""],
     screenshots: Array.isArray(app?.screenshots) ? app.screenshots : [],
     webUrl: app?.webUrl || "",
@@ -156,6 +164,24 @@ function AddAppModal({ t, locale, onClose, onSubmit, initialApp }) {
     }
   };
 
+  const handleAttachmentUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      setError("Only PDF files are supported.");
+      e.target.value = "";
+      return;
+    }
+    try {
+      const attachmentData = await readFileAsDataUrl(file);
+      setApp((prev) => ({ ...prev, attachmentData, attachmentName: file.name }));
+    } catch {
+      setError("Failed to read PDF attachment.");
+    } finally {
+      e.target.value = "";
+    }
+  };
+
   const handleSubmit = async () => {
     setError("");
     const { name, division, platform, category, tagline } = app;
@@ -192,6 +218,10 @@ function AddAppModal({ t, locale, onClose, onSubmit, initialApp }) {
         icon: app.icon,
         name: name.trim(),
         division: division.trim(),
+        picSystem: app.picSystem.trim(),
+        systemOwner: app.systemOwner.trim(),
+        attachmentName: app.attachmentName.trim(),
+        attachmentData: app.attachmentData,
         version: initialApp?.version || "v1.0.0",
         platform,
         webUrl: webUrlOut,
@@ -294,6 +324,14 @@ function AddAppModal({ t, locale, onClose, onSubmit, initialApp }) {
 
                 <Field label="Division" required>
                   <input style={inputStyle} type="text" placeholder="e.g. Distribution" value={app.division} onChange={set("division")} />
+                </Field>
+
+                <Field label="PIC System">
+                  <input style={inputStyle} type="text" placeholder="e.g. John Doe" value={app.picSystem} onChange={set("picSystem")} />
+                </Field>
+
+                <Field label="System Owner">
+                  <input style={inputStyle} type="text" placeholder="e.g. IT Operations" value={app.systemOwner} onChange={set("systemOwner")} />
                 </Field>
 
                 <Field label={locale === "id" ? "Kategori" : "Category"} required>
@@ -406,6 +444,69 @@ function AddAppModal({ t, locale, onClose, onSubmit, initialApp }) {
                       >
                         + Add feature
                       </button>
+                    </div>
+                  </Field>
+                </div>
+
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <Field label="Attachment (PDF)">
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      <label
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 12,
+                          padding: "12px 14px",
+                          border: `1px solid ${t.border}`,
+                          borderRadius: 10,
+                          background: t.surface,
+                          cursor: "pointer",
+                        }}
+                      >
+                        <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                          <div style={{ fontSize: 12, color: t.text, fontWeight: 600 }}>
+                            {app.attachmentName || "Upload attachment"}
+                          </div>
+                          <div style={{ fontSize: 11, color: t.textHint }}>
+                            PDF only
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            flexShrink: 0,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            padding: "8px 12px",
+                            borderRadius: 8,
+                            background: t.tag,
+                            color: t.text,
+                            border: `1px solid ${t.border}`,
+                          }}
+                        >
+                          Choose PDF
+                        </div>
+                        <input type="file" accept="application/pdf,.pdf" onChange={handleAttachmentUpload} style={{ display: "none" }} />
+                      </label>
+                      {app.attachmentData && (
+                        <button
+                          type="button"
+                          onClick={() => setApp((prev) => ({ ...prev, attachmentData: "", attachmentName: "" }))}
+                          style={{
+                            alignSelf: "flex-start",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            padding: "7px 10px",
+                            borderRadius: 8,
+                            background: t.surface,
+                            color: t.textSub,
+                            border: `1px solid ${t.border}`,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Remove attachment
+                        </button>
+                      )}
                     </div>
                   </Field>
                 </div>

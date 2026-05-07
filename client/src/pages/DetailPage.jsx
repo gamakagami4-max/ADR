@@ -28,6 +28,7 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
   const features = Array.isArray(app.features) ? app.features : [];
   const screenshots = Array.isArray(app.screenshots) ? app.screenshots : [];
   const webOpenHref = getWebOpenHref(app);
+  const hasPdfAttachment = typeof app.attachmentData === "string" && app.attachmentData.startsWith("data:application/pdf");
 
   const handleDelete = async () => {
     setDeleteError("");
@@ -196,6 +197,8 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
               [locale === "id" ? "Divisi" : "Division", app.division],
               [locale === "id" ? "Kategori" : "Category", formatCategoryLabel(app.category, locale)],
               [locale === "id" ? "Platform" : "Platform", app.platform],
+              [locale === "id" ? "PIC System" : "PIC System", app.picSystem || "-"],
+              [locale === "id" ? "System Owner" : "System Owner", app.systemOwner || "-"],
               ...(platformUsesWebUrl(app.platform) && String(app.webUrl || "").trim()
                 ? [
                     [
@@ -212,6 +215,20 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
                       ) : (
                         String(app.webUrl).trim()
                       ),
+                    ],
+                  ]
+                : []),
+              ...(hasPdfAttachment
+                ? [
+                    [
+                      locale === "id" ? "Lampiran" : "Attachment",
+                      <a
+                        href={app.attachmentData}
+                        download={app.attachmentName || `${app.name}-attachment.pdf`}
+                        style={{ color: t.red, fontWeight: 600, textDecoration: "underline" }}
+                      >
+                        {app.attachmentName || (locale === "id" ? "Unduh PDF" : "Download PDF")}
+                      </a>,
                     ],
                   ]
                 : []),
