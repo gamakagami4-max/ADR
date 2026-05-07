@@ -28,7 +28,14 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
   const features = Array.isArray(app.features) ? app.features : [];
   const screenshots = Array.isArray(app.screenshots) ? app.screenshots : [];
   const webOpenHref = getWebOpenHref(app);
-  const hasPdfAttachment = typeof app.attachmentData === "string" && app.attachmentData.startsWith("data:application/pdf");
+  const attachments = Array.isArray(app.attachments)
+    ? app.attachments.filter((item) => item && typeof item.data === "string" && item.data.startsWith("data:application/pdf"))
+    : [];
+  const attachmentList = attachments.length > 0
+    ? attachments
+    : (typeof app.attachmentData === "string" && app.attachmentData.startsWith("data:application/pdf")
+        ? [{ name: app.attachmentName || "attachment.pdf", data: app.attachmentData }]
+        : []);
 
   const handleDelete = async () => {
     setDeleteError("");
@@ -218,17 +225,22 @@ export default function DetailPage({ app, onBack, isAdmin, onDeleteApp, onEditAp
                     ],
                   ]
                 : []),
-              ...(hasPdfAttachment
+              ...(attachmentList.length > 0
                 ? [
                     [
-                      locale === "id" ? "Lampiran" : "Attachment",
-                      <a
-                        href={app.attachmentData}
-                        download={app.attachmentName || `${app.name}-attachment.pdf`}
-                        style={{ color: t.red, fontWeight: 600, textDecoration: "underline" }}
-                      >
-                        {app.attachmentName || (locale === "id" ? "Unduh PDF" : "Download PDF")}
-                      </a>,
+                      locale === "id" ? "Lampiran" : "Attachments",
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        {attachmentList.map((item, index) => (
+                          <a
+                            key={`${item.name}-${index}`}
+                            href={item.data}
+                            download={item.name || `${app.name}-attachment-${index + 1}.pdf`}
+                            style={{ color: t.red, fontWeight: 600, textDecoration: "underline" }}
+                          >
+                            {item.name || `${locale === "id" ? "Unduh PDF" : "Download PDF"} ${index + 1}`}
+                          </a>
+                        ))}
+                      </div>,
                     ],
                   ]
                 : []),

@@ -23,6 +23,7 @@ const EMPTY_APP = {
   about: "",
   icon: "",
   iconName: "",
+  attachments: [],
   attachmentName: "",
   attachmentData: "",
   features: [""],
@@ -53,6 +54,13 @@ function mapAppToForm(app) {
     about: app?.about || "",
     icon: app?.icon || "",
     iconName: "",
+    attachments: Array.isArray(app?.attachments)
+      ? app.attachments
+          .filter((item) => item && typeof item.data === "string" && item.data.startsWith("data:application/pdf"))
+          .map((item) => ({ name: item.name || "attachment.pdf", data: item.data }))
+      : (app?.attachmentData
+          ? [{ name: app?.attachmentName || "attachment.pdf", data: app.attachmentData }]
+          : []),
     attachmentName: app?.attachmentName || "",
     attachmentData: app?.attachmentData || "",
     features: Array.isArray(app?.features) && app.features.length > 0 ? app.features : [""],
@@ -165,18 +173,23 @@ function AddAppModal({ t, locale, onClose, onSubmit, initialApp }) {
   };
 
   const handleAttachmentUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      setError("Only PDF files are supported.");
-      e.target.value = "";
-      return;
-    }
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const pdfFiles = files.filter((file) => file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"));
+    const rejectedCount = files.length - pdfFiles.length;
     try {
-      const attachmentData = await readFileAsDataUrl(file);
-      setApp((prev) => ({ ...prev, attachmentData, attachmentName: file.name }));
+      const settled = await Promise.allSettled(
+        pdfFiles.map(async (file) => ({ name: file.name, data: await readFileAsDataUrl(file) }))
+      );
+      const nextAttachments = settled.filter((result) => result.status === "fulfilled").map((result) => result.value);
+      if (nextAttachments.length > 0) {
+        setApp((prev) => ({ ...prev, attachments: [...prev.attachments, ...nextAttachments] }));
+      }
+      if (rejectedCount > 0 || nextAttachments.length !== settled.length) {
+        setError("Some files were skipped. Only PDF files are supported.");
+      }
     } catch {
-      setError("Failed to read PDF attachment.");
+      setError("Failed to read PDF attachments.");
     } finally {
       e.target.value = "";
     }
@@ -220,8 +233,9 @@ function AddAppModal({ t, locale, onClose, onSubmit, initialApp }) {
         division: division.trim(),
         picSystem: app.picSystem.trim(),
         systemOwner: app.systemOwner.trim(),
-        attachmentName: app.attachmentName.trim(),
-        attachmentData: app.attachmentData,
+        attachments: app.attachments,
+        attachmentName: app.attachments[0]?.name || "",
+        attachmentData: app.attachments[0]?.data || "",
         version: initialApp?.version || "v1.0.0",
         platform,
         webUrl: webUrlOut,
@@ -449,7 +463,7 @@ function AddAppModal({ t, locale, onClose, onSubmit, initialApp }) {
                 </div>
 
                 <div style={{ gridColumn: "1 / -1" }}>
-                  <Field label="Attachment (PDF)">
+                  <Field label="Attachments (PDF)">
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                       <label
                         style={{
@@ -466,10 +480,10 @@ function AddAppModal({ t, locale, onClose, onSubmit, initialApp }) {
                       >
                         <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                           <div style={{ fontSize: 12, color: t.text, fontWeight: 600 }}>
-                            {app.attachmentName || "Upload attachment"}
+                            {app.attachments.length > 0 ? `${app.attachments.length} file(s) selected` : "Upload attachments"}
                           </div>
                           <div style={{ fontSize: 11, color: t.textHint }}>
-                            PDF only
+                            PDF only (multiple allowed)
                           </div>
                         </div>
                         <div
@@ -484,28 +498,42 @@ function AddAppModal({ t, locale, onClose, onSubmit, initialApp }) {
                             border: `1px solid ${t.border}`,
                           }}
                         >
-                          Choose PDF
+                          Choose files
                         </div>
-                        <input type="file" accept="application/pdf,.pdf" onChange={handleAttachmentUpload} style={{ display: "none" }} />
+                        <input type="file" accept="application/pdf,.pdf" multiple onChange={handleAttachmentUpload} style={{ display: "none" }} />
                       </label>
-                      {app.attachmentData && (
-                        <button
-                          type="button"
-                          onClick={() => setApp((prev) => ({ ...prev, attachmentData: "", attachmentName: "" }))}
-                          style={{
-                            alignSelf: "flex-start",
-                            fontSize: 12,
-                            fontWeight: 600,
-                            padding: "7px 10px",
-                            borderRadius: 8,
-                            background: t.surface,
-                            color: t.textSub,
-                            border: `1px solid ${t.border}`,
-                            cursor: "pointer",
-                          }}
-                        >
-                          Remove attachment
-                        </button>
+                      {app.attachments.length > 0 && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          {app.attachments.map((item, index) => (
+                            <div key={`${item.name}-${index}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, fontSize: 12 }}>
+                              <span style={{ color: t.textSub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {item.name}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setApp((prev) => ({
+                                    ...prev,
+                                    attachments: prev.attachments.filter((_, itemIndex) => itemIndex !== index),
+                                  }))
+                                }
+                                style={{
+                                  flexShrink: 0,
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  padding: "5px 8px",
+                                  borderRadius: 8,
+                                  background: t.surface,
+                                  color: t.textSub,
+                                  border: `1px solid ${t.border}`,
+                                  cursor: "pointer",
+                                }}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </Field>

@@ -52,6 +52,12 @@ const appSchema = new mongoose.Schema(
     users: { type: String, default: "0 active", trim: true },
     features: [{ type: String, trim: true }],
     screenshots: [{ type: String, trim: true }],
+    attachments: [
+      {
+        name: { type: String, trim: true, default: "" },
+        data: { type: String, trim: true, default: "" },
+      },
+    ],
     attachmentName: { type: String, trim: true, default: "" },
     attachmentData: { type: String, trim: true, default: "" },
   },
@@ -122,6 +128,7 @@ function summarizeRequestApp(payload) {
     category: payload?.category,
     featuresCount: Array.isArray(payload?.features) ? payload.features.length : 0,
     screenshotsCount: Array.isArray(payload?.screenshots) ? payload.screenshots.length : 0,
+    attachmentsCount: Array.isArray(payload?.attachments) ? payload.attachments.length : 0,
     attachmentName: payload?.attachmentName,
     attachmentLength: typeof payload?.attachmentData === "string" ? payload.attachmentData.length : 0,
     iconLength: typeof payload?.icon === "string" ? payload.icon.length : 0,
