@@ -700,6 +700,17 @@ export default function DirectoryPage({
     });
   }, [search, divisionFilter, platformFilter, categoryFilter, apps, locale]);
 
+  const categorySummary = useMemo(() => {
+    const counts = { main: 0, sub: 0, support: 0 };
+    for (const item of filtered) {
+      const norm = normalizeAppCategory(item.category);
+      if (norm && Object.prototype.hasOwnProperty.call(counts, norm)) {
+        counts[norm] += 1;
+      }
+    }
+    return counts;
+  }, [filtered, locale]);
+
   const inputStyle = {
     background: t.input,
     border: `1px solid ${t.border}`,
@@ -813,6 +824,15 @@ export default function DirectoryPage({
           ? (locale === "id" ? `Menampilkan semua ${apps.length} aplikasi` : `Showing all ${apps.length} apps`)
           : (locale === "id" ? `${filtered.length} dari ${apps.length} aplikasi` : `${filtered.length} of ${apps.length} apps`)}
         {search && <span> for <strong style={{ color: t.text }}>&ldquo;{search}&rdquo;</strong></span>}
+      </p>
+
+      <p style={{ fontSize: 11, color: t.textHint, marginTop: -8, marginBottom: "var(--layout-dir-count-mb)" }}>
+        {locale === "id" ? "Kategori" : "Category"}:{" "}
+        <span style={{ color: t.textSub, fontWeight: 600 }}>
+          {["main", "sub", "support"]
+            .map((key) => `${formatCategoryLabel(key, locale)} ${categorySummary[key] || 0}`)
+            .join(" · ")}
+        </span>
       </p>
 
       {loading ? (
